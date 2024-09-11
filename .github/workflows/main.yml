@@ -22,7 +22,7 @@ jobs:
       uses: actions/setup-node@v4
       with:
         node-version: 21
-    - run: npm ci
+    - run: npm install
     - run: npm run build
 
     - name: Deploy static site to S3 bucket
