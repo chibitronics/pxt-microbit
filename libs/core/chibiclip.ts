@@ -1,3 +1,7 @@
+
+/*
+ * 
+ */
 namespace ChibiClip {
   /**
    * Activate the pin at index

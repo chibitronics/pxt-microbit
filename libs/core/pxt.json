@@ -26,6 +26,7 @@
         "images.cpp",
         "basic.cpp",
         "basic.ts",
+        "chibiclip.ts",
         "icons.ts",
         "icons.jres",
         "input.cpp",

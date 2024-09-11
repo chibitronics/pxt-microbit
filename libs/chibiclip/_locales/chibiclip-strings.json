@@ -1,6 +1,0 @@
-{
-  "ChibiClip.activatePin|block": "activate pin at $index",
-  "ChibiClip.deactivatePin|block": "deactivate pin at $index",
-  "ChibiClip|block": "ChibiClip",
-  "{id:category}ChibiClip": "ChibiClip"
-}
