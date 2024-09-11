@@ -95,6 +95,7 @@
   "Buffer.write": "Write contents of `src` at `dstOffset` in current buffer.",
   "ChibiClip.activatePin": "Activate the pin at index",
   "ChibiClip.deactivatePin": "Deactivate the pin at index",
+  "ChibiClip.setLight": "Set the pin at index",
   "EventCreationMode": "How to create the event.",
   "EventCreationMode.CreateAndFire": "MicroBitEvent is initialised, and its event handlers are immediately fired (not suitable for use in interrupts!).",
   "EventCreationMode.CreateOnly": "MicroBitEvent is initialised, and no further processing takes place.",
