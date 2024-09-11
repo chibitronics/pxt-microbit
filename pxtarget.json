@@ -19,6 +19,7 @@
         "libs/bitmap",
         "libs/fonts",
         "libs/arcadeshield",
+        "libs/chibiclip",
         "libs/color",
         "libs/audio-recording"
     ],

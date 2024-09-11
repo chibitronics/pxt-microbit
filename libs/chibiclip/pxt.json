@@ -1,0 +1,15 @@
+{
+  "name": "chibiclip",
+  "description": "WIP extension~",
+  "dependencies": {
+      "core": "file:../core"
+  },
+  "files": [
+    "hello.ts"
+  ],
+  "public": true,
+  "preferredEditor": "tsprj",
+  "disablesVariants": [
+      "mbdal"
+  ]
+}
