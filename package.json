@@ -2,6 +2,12 @@
     "name": "pxt-microbit",
     "version": "7.1.2",
     "description": "micro:bit target for Microsoft MakeCode (PXT)",
+    "scripts": {
+        "help": "pxt serve --help",
+        "start": "pxt serve",
+        "build": "pxt staticpkg",
+        "postinstall": "patch-package"
+    },
     "keywords": [
         "JavaScript",
         "education",
@@ -39,6 +45,8 @@
         "@types/react-dom": "16.0.3",
         "@types/web-bluetooth": "0.0.4",
         "less": "3.13.1",
+        "patch-package": "^8.0.0",
+        "pxt": "^0.5.1",
         "react": "16.8.3",
         "react-dom": "16.11.0",
         "semantic-ui-less": "2.4.1",

@@ -208,6 +208,38 @@
             }
         ]
     },
+    "chibiclip": {
+        "simulationBehavior": "fakeneopixel",
+        "visual": {
+            "builtIn": "fakeneopixel",
+            "width": 58,
+            "height": 113,
+            "pinDistance": 9,
+            "pinLocations": [
+            ]
+        },
+        "numberOfPins": 0,
+        "pinDefinitions": [
+        ],
+        "instantiation": {
+            "kind": "function",
+            "fullyQualifiedName": "fakeneopixel.create"
+        },
+        "assembly": [
+            {
+                "part": true,
+                "pinIndices": [
+                    2
+                ]
+            },
+            {
+                "pinIndices": [
+                    0,
+                    1
+                ]
+            }
+        ]
+    },
     "ledmatrix": {
         "visual": {
             "builtIn": "ledmatrix",
