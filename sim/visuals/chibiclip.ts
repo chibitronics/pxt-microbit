@@ -3,8 +3,7 @@ namespace pxsim.visuals {
     const PIXEL_RADIUS = PIN_DIST;
 
     // For the instructions parts list
-    export function mkFakeNeoPixelPart(xy: Coord = [0, 0]): SVGElAndSize {
-        console.log('vrk make neo pixel party');
+    export function mkChibiClipPart(xy: Coord = [0, 0]): SVGElAndSize {
         const chibiClip = `<svg xmlns="http://www.w3.org/2000/svg" width="420" height="100">
 <g>
   <rect width="420" height="100" rx="5" fill="lightblue"/>
@@ -58,7 +57,7 @@ namespace pxsim.visuals {
         const el = svg.parseString(chibiClip).firstElementChild as SVGGElement;
         return { el, x: l, y: t, w: w, h: h };
     }
-    export class FakeNeoPixel {
+    export class ChibiClip {
         public el: SVGElement;
         public cy: number;
 
@@ -87,7 +86,7 @@ namespace pxsim.visuals {
         }
     }
 
-    export class FakeNeoPixelView implements IBoardPart<EdgeConnectorState> {
+    export class ChibiClipView implements IBoardPart<EdgeConnectorState> {
         public style: string = `
             .sim-neopixel-strip {
             }
@@ -120,7 +119,7 @@ namespace pxsim.visuals {
             console.log('vrk mystrey el', svgEl)
 
             console.log('vrk ok hereeee~');
-            let part = mkFakeNeoPixelPart();
+            let part = mkChibiClipPart();
             this.part = part;
             this.stripGroup.appendChild(part.el);
             this.overElement = null;

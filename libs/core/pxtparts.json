@@ -209,9 +209,9 @@
         ]
     },
     "chibiclip": {
-        "simulationBehavior": "fakeneopixel",
+        "simulationBehavior": "chibiclip",
         "visual": {
-            "builtIn": "fakeneopixel",
+            "builtIn": "chibiclip",
             "width": 58,
             "height": 113,
             "pinDistance": 9,
@@ -223,7 +223,7 @@
         ],
         "instantiation": {
             "kind": "function",
-            "fullyQualifiedName": "fakeneopixel.create"
+            "fullyQualifiedName": "chibiclip.create"
         },
         "assembly": [
             {

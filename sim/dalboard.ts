@@ -117,10 +117,10 @@ namespace pxsim {
             this.builtinPartVisuals["neopixel"] = (xy: visuals.Coord) => visuals.mkNeoPixelPart(xy);
             console.log('change reflected here :D .....');
 
-            this.builtinParts["fakeneopixel"] = this.edgeConnectorState; 
-            this.builtinVisuals["fakeneopixel"] = () => new visuals.FakeNeoPixelView();
+            this.builtinParts["chibiclip"] = this.edgeConnectorState; 
+            this.builtinVisuals["chibiclip"] = () => new visuals.ChibiClipView();
             console.log('vrk parent being called');
-            this.builtinPartVisuals["fakeneopixel"] = (xy: visuals.Coord) => visuals.mkFakeNeoPixelPart(xy);
+            this.builtinPartVisuals["chibiclip"] = (xy: visuals.Coord) => visuals.mkChibiClipPart(xy);
 
             this.builtinPartVisuals["buttonpair"] = (xy: visuals.Coord) => visuals.mkBtnSvg(xy);
             this.builtinPartVisuals["ledmatrix"] = (xy: visuals.Coord) => visuals.mkLedMatrixSvg(xy, 8, 8);
