@@ -57,35 +57,6 @@ namespace pxsim.visuals {
         const el = svg.parseString(chibiClip).firstElementChild as SVGGElement;
         return { el, x: l, y: t, w: w, h: h };
     }
-    export class ChibiClip {
-        public el: SVGElement;
-        public cy: number;
-
-        constructor(xy: Coord = [0, 0], width: number = 1) {
-            // let el = <SVGElement>svg.elt("rect");
-            // let r = PIXEL_RADIUS;
-            // let [cx, cy] = xy;
-            // let y = cy - r;
-            // if (width <= 1)
-            //     svg.hydrate(el, { x: "-50%", y: y, width: "100%", height: r * 2, class: "sim-neopixel" });
-            // else {
-            //     let x = cx - r;
-            //     svg.hydrate(el, { x: x, y: y, width: r * 2, height: r * 2, class: "sim-neopixel" });
-            // }
-            // this.el = el;
-            // this.cy = cy;
-        }
-
-        public setRgb(rgb: [number, number, number]) {
-            let hsl = visuals.rgbToHsl(rgb);
-            let [h, s, l] = hsl;
-            // at least 70% luminosity
-            l = Math.max(l, 60);
-            let fill = `hsl(${h}, ${s}%, ${l}%)`;
-            this.el.setAttribute("fill", fill);
-        }
-    }
-
     export class ChibiClipView implements IBoardPart<EdgeConnectorState> {
         public style: string = `
             .sim-neopixel-strip {
@@ -99,10 +70,8 @@ namespace pxsim.visuals {
         private lastLocation: Coord;
         private stripGroup: SVGGElement;
 
-        private whatsThisEl: SVGSVGElement;
-
         constructor() {
-            console.log('vrk neo pixel view constructed');
+            console.log('ChibiClipView constructed');
         }
 
         public init(bus: EventBus,
@@ -111,14 +80,9 @@ namespace pxsim.visuals {
             otherParams: Map<string>): void {
             this.stripGroup = <SVGGElement>svg.elt("g");
             this.element = this.stripGroup;
-            console.log('vrk neo pixel view init');
             this.lastLocation = [0, 0];
             this.state = state;
 
-            this.whatsThisEl = svgEl;
-            console.log('vrk mystrey el', svgEl)
-
-            console.log('vrk ok hereeee~');
             let part = mkChibiClipPart();
             this.part = part;
             this.stripGroup.appendChild(part.el);
@@ -129,13 +93,14 @@ namespace pxsim.visuals {
             let [x, y] = xy;
             let loc: Coord = [x, y];
             this.lastLocation = loc;
-            this.updateStripLoc();
+            this.updateClipLoc();
         }
-        private updateStripLoc() {
-            let [x, y] = this.lastLocation;
-            U.assert(typeof x === "number" && typeof y === "number", "invalid x,y for NeoPixel strip");
-            svg.hydrate(this.part.el, { transform: `translate(26 280)` }); //TODO: update part's l,h, etc.
+
+        private updateClipLoc() {
+            // Hardcode the value for now:
+            svg.hydrate(this.part.el, { transform: `translate(26 280)` });
         }
+
         public updateState(): void {
             for (let i = 0; i < 10; i++) {
                 console.log('update state here', this.state.pins[i].value);
@@ -153,7 +118,6 @@ namespace pxsim.visuals {
                     pinLedEl.setAttribute('fill', 'gray');
                 }
             }
-
         }
         public updateTheme(): void { }
     }
