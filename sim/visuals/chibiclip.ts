@@ -97,7 +97,7 @@ namespace pxsim.visuals {
 
     private updateClipLoc() {
       // Hardcode the value for now:
-      svg.hydrate(this.part.el, { transform: `translate(26 280)` });
+      svg.hydrate(this.part.el, { transform: `translate(38 220)` });
     }
 
     public updateState(): void {
