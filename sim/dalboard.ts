@@ -115,11 +115,9 @@ namespace pxsim {
             this.builtinParts["neopixel"] = (pin: Pin) => { return this.neopixelState(pin.id); };
             this.builtinVisuals["neopixel"] = () => new visuals.NeoPixelView(pxsim.parsePinString);
             this.builtinPartVisuals["neopixel"] = (xy: visuals.Coord) => visuals.mkNeoPixelPart(xy);
-            console.log('change reflected here :D .....');
 
             this.builtinParts["chibiclip"] = this.edgeConnectorState; 
             this.builtinVisuals["chibiclip"] = () => new visuals.ChibiClipView();
-            console.log('vrk parent being called');
             this.builtinPartVisuals["chibiclip"] = (xy: visuals.Coord) => visuals.mkChibiClipPart(xy);
 
             this.builtinPartVisuals["buttonpair"] = (xy: visuals.Coord) => visuals.mkBtnSvg(xy);
@@ -141,7 +139,6 @@ namespace pxsim {
             const boardDef = msg.boardDefinition;
             const cmpsList = msg.parts;
             const cmpDefs = msg.partDefinitions || {};
-            console.log('vrk dalboard 2');
             const fnArgs = msg.fnArgs;
 
             const v2Parts: pxt.Map<boolean> = {

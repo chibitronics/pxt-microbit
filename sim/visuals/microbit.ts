@@ -342,7 +342,6 @@ path.sim-board {
         }
 
         constructor(public props: IBoardProps) {
-            console.log('boarddddd constructor is here');
             this.recordPinCoords();
             this.buildDom();
             if (props && props.wireframe)
