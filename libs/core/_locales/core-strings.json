@@ -50,7 +50,7 @@
   "BeatFraction.Whole|block": "1",
   "Buffer|block": "Buffer",
   "Button.AB|block": "A+B",
-  "ChibiClip.setLighLevel|block": "set $pin level to $level",
+  "ChibiClip.setLightLevel|block": "set $pin level to $level",
   "ChibiClip.setLight|block": "set $pin to $on",
   "ChibiClip|block": "Chibi Clip",
   "Delimiters.CarriageReturn|block": "carriage return (\r)",

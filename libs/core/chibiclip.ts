@@ -1,5 +1,7 @@
+const ANALOG_PIN_MAX_VALUE = 1023;
+
 /*
- * Test thing
+ * Visualization for the Chibi Clip.
  */
 //% color=#f91b4f weight=100 icon="\uf0c6" block="Chibi Clip"
 namespace ChibiClip {
@@ -34,12 +36,13 @@ namespace ChibiClip {
   //% pin.defl='A0'
   //% level.min=0 level.max=100
   //% parts=chibiclip
-  export function setLighLevel(
+  export function setLightLevel(
     pin: AnalogPinBlockParameter,
     level: number
   ): void {
     const analogPin = stringToAnalogPin(pin);
-    pins.analogWritePin(analogPin, level);
+    const writePinValue = Math.round(level / 100.0 * ANALOG_PIN_MAX_VALUE);
+    pins.analogWritePin(analogPin, writePinValue);
   }
 
   function stringToDigitalPin(pinInput: DigitalPinBlockParameter): DigitalPin {

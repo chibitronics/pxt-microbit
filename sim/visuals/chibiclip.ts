@@ -1,3 +1,9 @@
+const ANALOG_PIN_MAX_VALUE = 1023;
+
+const CLIP_X = 38;
+// const CLIP_Y = 220;
+const CLIP_Y = 220 + 120;
+
 const CLIP_WIDTH = 420;
 const CLIP_HEIGHT = 120;
 
@@ -152,7 +158,7 @@ namespace pxsim.visuals {
 
     private updateClipLoc() {
       // Hardcode the value for now:
-      svg.hydrate(this.part.el, { transform: `translate(38 220)` });
+      svg.hydrate(this.part.el, { transform: `translate(${CLIP_X} ${CLIP_Y})` });
     }
 
     public updateState(): void {
@@ -209,13 +215,13 @@ namespace pxsim.visuals {
     private setAnalogDisplay(index: number) {
       const pin = this.state.pins[index];
       U.assert((pin.mode & PinFlags.Analog) !== 0);
-      const value = Math.round(100 - (pin.value || 0) / 255 * 100) + "%";
+      const percentageValue = Math.round((pin.value / ANALOG_PIN_MAX_VALUE) * 100);
 
       const pinFillEl = this.element.querySelector(`#pin${index} rect.level`);
       const pinLedFillEl = this.element.querySelector(`#pin${index} circle.level`);
       const pinLabelEl = this.element.querySelector(`#pin${index} text.label`);
       
-      pinLabelEl.innerHTML = value;
+      pinLabelEl.innerHTML = `${percentageValue}%`;
     }
 
     public updateTheme(): void {}
