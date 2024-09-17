@@ -16,7 +16,7 @@ const EVENT2_PERIOD = 3000; // Fire every 3 seconds
 /*
  * Visualization for the Chibi Clip.
  */
-//% color=#f91b4f weight=100 icon="\uf0c6" block="Chibi Clip"
+//% color=#f91b4f weight=100 icon="\uf0c6" block="Chibi Clip" groups="['Lights', 'Sensing']"
 namespace ChibiClip {
   /**
    * Turns the light on or off at the given pin value.
@@ -29,6 +29,8 @@ namespace ChibiClip {
   //% pin.defl='D0'
   //% on.shadow="toggleOnOff"
   //% parts=chibiclip
+  //% group="Lights"
+  //% weight=3
   export function setLight(pin: DigitalPinBlockParameter, on: boolean): void {
     const digitalPin = stringToDigitalPin(pin);
     const value = on ? 1 : 0;
@@ -46,6 +48,8 @@ namespace ChibiClip {
   //% pin.defl='A0'
   //% level.min=0 level.max=100
   //% parts=chibiclip
+  //% group="Lights"
+  //% weight=2
   export function setLightLevel(
     pin: AnalogPinBlockParameter,
     level: number
@@ -68,6 +72,8 @@ namespace ChibiClip {
   //% pin.fieldOptions.values='A0,A1,A2,A3,A4,A5'
   //% pin.defl='A0'
   //% parts=chibiclip
+  //% group="Lights"
+  //% weight=1
   export function showEffectOnPin(
     effect: EffectString,
     pin: AnalogPinBlockParameter
@@ -92,85 +98,6 @@ namespace ChibiClip {
     }
   }
 
-  function twinkle(pin: AnalogPin, tempo = 16) {
-    let current = ANALOG_PIN_MAX_VALUE / 2;
-    for (let i = 0; i < tempo * 8; i++) {
-      current = fadeTo(
-        current,
-        getRandomInt(0, ANALOG_PIN_MAX_VALUE),
-        tempo,
-        pin,
-        3
-      );
-    }
-  }
-
-  function blink(pin: AnalogPin, tempo = 16) {
-    fadeTo(0, ANALOG_PIN_MAX_VALUE, tempo, pin, 7);
-    fadeTo(ANALOG_PIN_MAX_VALUE, 0, tempo, pin, 7);
-  }
-
-  function heartbeat(pin: AnalogPin, tempo = 50) {
-    let current = 0;
-    if (tempo > 50) tempo = 50;
-
-    current = fadeTo(current, 768, 8, pin, 1);
-    current = fadeTo(current, 16, 8, pin, 1);
-    basic.pause(80);
-    basic.pause((13 - tempo / 4) * 15);
-
-    current = fadeTo(current, ANALOG_PIN_MAX_VALUE, 8, pin, 1);
-    current = fadeTo(current, 0, 8, pin, 1);
-    basic.pause(214);
-    basic.pause((13 - tempo / 4) * 37);
-  }
-
-  function sos(pin: AnalogPin, tempo = 20) {
-    for (let i = 0; i < 3; i++) {
-      pins.analogWritePin(pin, ANALOG_PIN_MAX_VALUE);
-      basic.pause((tempo / 4) * 20);
-      pins.analogWritePin(pin, 0);
-      basic.pause((tempo / 4) * 20);
-    }
-    for (let i = 0; i < 3; i++) {
-      pins.analogWritePin(pin, ANALOG_PIN_MAX_VALUE);
-      basic.pause((tempo / 4) * 50);
-      pins.analogWritePin(pin, 0);
-      basic.pause((tempo / 4) * 20);
-    }
-    for (let i = 0; i < 3; i++) {
-      pins.analogWritePin(pin, ANALOG_PIN_MAX_VALUE);
-      basic.pause((tempo / 4) * 20);
-      pins.analogWritePin(pin, 0);
-      basic.pause((tempo / 4) * 20);
-    }
-    basic.pause((tempo / 4) * 100);
-  }
-
-  function getRandomInt(min: number, max: number) {
-    const minCeiled = Math.ceil(min);
-    const maxFloored = Math.floor(max);
-    return Math.floor(Math.random() * (maxFloored - minCeiled) + minCeiled); // The maximum is exclusive and the minimum is inclusive
-  }
-
-  function fadeTo(
-    startingValue: number,
-    targetValue: number,
-    fadeDelta: number,
-    pin: AnalogPin,
-    pauseInMs: number
-  ) {
-    let currentValue = startingValue;
-    while (Math.abs(currentValue - targetValue) > fadeDelta) {
-      pins.analogWritePin(pin, currentValue);
-      currentValue =
-        currentValue +
-        (targetValue - currentValue > 0 ? fadeDelta : -fadeDelta);
-      basic.pause(pauseInMs);
-    }
-    return currentValue;
-  }
-
   /**
    *
    */
@@ -184,6 +111,8 @@ namespace ChibiClip {
   //% value.fieldOptions.values='HIGH,LOW'
   //% value.defl='HIGH'
   //% parts=chibiclip
+  //% group="Sensing"
+  //% weight=2
   export function isPinValue(
     pin: DigitalPinBlockParameter,
     value: DigitalPinValueType
@@ -204,6 +133,8 @@ namespace ChibiClip {
   //% pin.fieldOptions.values='A0,A1,A2,A3,A4,A5'
   //% pin.defl='A0'
   //% parts=chibiclip
+  //% group="Sensing"
+  //% weight=1
   export function readPinLevel(pin: AnalogPinBlockParameter): number {
     const analogPin = stringToAnalogPin(pin);
     const pinValue = pins.analogReadPin(analogPin);
@@ -225,6 +156,8 @@ namespace ChibiClip {
   //% eventType.fieldOptions.values='pressed,released,changed,HIGH,LOW'
   //% eventType.defl='pressed'
   //% parts=chibiclip
+  //% group="Sensing"
+  //% weight=3
   export function onPinEvent(
     pin: DigitalPinBlockParameter,
     eventType: DigitalPinEventParameter,
@@ -302,4 +235,82 @@ function stringToAnalogPin(pinInput: AnalogPinBlockParameter): AnalogPin {
     case "A5":
       return AnalogPin.P5;
   }
+}
+
+function twinkle(pin: AnalogPin, tempo = 16) {
+  let current = ANALOG_PIN_MAX_VALUE / 2;
+  for (let i = 0; i < tempo * 8; i++) {
+    current = fadeTo(
+      current,
+      getRandomInt(0, ANALOG_PIN_MAX_VALUE),
+      tempo,
+      pin,
+      3
+    );
+  }
+}
+
+function blink(pin: AnalogPin, tempo = 16) {
+  fadeTo(0, ANALOG_PIN_MAX_VALUE, tempo, pin, 7);
+  fadeTo(ANALOG_PIN_MAX_VALUE, 0, tempo, pin, 7);
+}
+
+function heartbeat(pin: AnalogPin, tempo = 50) {
+  let current = 0;
+  if (tempo > 50) tempo = 50;
+
+  current = fadeTo(current, 768, 8, pin, 1);
+  current = fadeTo(current, 16, 8, pin, 1);
+  basic.pause(80);
+  basic.pause((13 - tempo / 4) * 15);
+
+  current = fadeTo(current, ANALOG_PIN_MAX_VALUE, 8, pin, 1);
+  current = fadeTo(current, 0, 8, pin, 1);
+  basic.pause(214);
+  basic.pause((13 - tempo / 4) * 37);
+}
+
+function sos(pin: AnalogPin, tempo = 20) {
+  for (let i = 0; i < 3; i++) {
+    pins.analogWritePin(pin, ANALOG_PIN_MAX_VALUE);
+    basic.pause((tempo / 4) * 20);
+    pins.analogWritePin(pin, 0);
+    basic.pause((tempo / 4) * 20);
+  }
+  for (let i = 0; i < 3; i++) {
+    pins.analogWritePin(pin, ANALOG_PIN_MAX_VALUE);
+    basic.pause((tempo / 4) * 50);
+    pins.analogWritePin(pin, 0);
+    basic.pause((tempo / 4) * 20);
+  }
+  for (let i = 0; i < 3; i++) {
+    pins.analogWritePin(pin, ANALOG_PIN_MAX_VALUE);
+    basic.pause((tempo / 4) * 20);
+    pins.analogWritePin(pin, 0);
+    basic.pause((tempo / 4) * 20);
+  }
+  basic.pause((tempo / 4) * 100);
+}
+
+function getRandomInt(min: number, max: number) {
+  const minCeiled = Math.ceil(min);
+  const maxFloored = Math.floor(max);
+  return Math.floor(Math.random() * (maxFloored - minCeiled) + minCeiled); // The maximum is exclusive and the minimum is inclusive
+}
+
+function fadeTo(
+  startingValue: number,
+  targetValue: number,
+  fadeDelta: number,
+  pin: AnalogPin,
+  pauseInMs: number
+) {
+  let currentValue = startingValue;
+  while (Math.abs(currentValue - targetValue) > fadeDelta) {
+    pins.analogWritePin(pin, currentValue);
+    currentValue =
+      currentValue + (targetValue - currentValue > 0 ? fadeDelta : -fadeDelta);
+    basic.pause(pauseInMs);
+  }
+  return currentValue;
 }
