@@ -2,6 +2,7 @@ const ANALOG_PIN_MAX_VALUE = 1023;
 type DigitalPinBlockParameter = "D0" | "D1" | "D2" | "D3" | "D4" | "D5";
 type AnalogPinBlockParameter = "A0" | "A1" | "A2" | "A3" | "A4" | "A5";
 type DigitalPinEventParameter = "pressed" | "released" | "changed" | "HIGH" | "LOW";
+type DigitalPinValueType = "HIGH" | "LOW";
 
 const EVENT1_PERIOD = 5000; // Fire every 5 seconds
 const EVENT2_PERIOD = 3000; // Fire every 3 seconds
@@ -46,6 +47,43 @@ namespace ChibiClip {
     const analogPin = stringToAnalogPin(pin);
     const writePinValue = Math.round((level / 100.0) * ANALOG_PIN_MAX_VALUE);
     pins.analogWritePin(analogPin, writePinValue);
+  }
+
+  /**
+   *
+   */
+  //% block="is $pin $value"
+  //% pin.fieldEditor="textdropdown"
+  //% pin.fieldOptions.decompileLiterals=true
+  //% pin.fieldOptions.values='D0,D1,D2,D3,D4,D5'
+  //% pin.defl='D0'
+  //% value.fieldEditor="textdropdown"
+  //% value.fieldOptions.decompileLiterals=true
+  //% value.fieldOptions.values='HIGH,LOW'
+  //% value.defl='HIGH'
+  //% parts=chibiclip
+  export function isPinValue(pin: DigitalPinBlockParameter, value: DigitalPinValueType): boolean {
+    const digitalPin = stringToDigitalPin(pin);
+    const pinValue = pins.digitalReadPin(digitalPin);
+    if (value === 'HIGH') {
+      return pinValue > 0;
+    } else if (value === 'LOW') {
+      return pinValue === 0;
+    }
+    throw new Error(`Parameter value=${value} is invalid`);
+  }
+
+  //% block="read level $pin"
+  //% pin.fieldEditor="textdropdown"
+  //% pin.fieldOptions.values='A0,A1,A2,A3,A4,A5'
+  //% pin.defl='A0'
+  //% parts=chibiclip
+  export function readPinLevel(pin: AnalogPinBlockParameter): number {
+    const analogPin= stringToAnalogPin(pin);
+    const pinValue = pins.analogReadPin(analogPin);
+    // This pin value will be between 0 and 1023, so let's map it to 0 to 100
+    const level = Math.round(pinValue / ANALOG_PIN_MAX_VALUE * 100);
+    return level;
   }
 
   /**
