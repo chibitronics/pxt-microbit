@@ -10,7 +10,7 @@ namespace ChibiClip {
   //% block="set $pin to $on"
   //% pin.fieldEditor="textdropdown"
   //% pin.fieldOptions.decompileLiterals=true
-  //% pin.fieldOptions.values='d0,d1,d2,d3,d4,d5'
+  //% pin.fieldOptions.values='D0,D1,D2,D3,D4,D5'
   //% pin.defl='d0'
   //% on.shadow="toggleOnOff"
   //% parts=chibiclip
@@ -21,21 +21,21 @@ namespace ChibiClip {
   }
 }
 
-type DigitalPinInput = "d0"|"d1"|"d2"|"d3"|"d4"|"d5";
+type DigitalPinInput = "D0"|"D1"|"D2"|"D3"|"D4"|"D5";
 
 function stringToDigitalPin(pinInput : DigitalPinInput): DigitalPin {
   switch (pinInput) {
-    case "d0":
+    case "D0":
       return DigitalPin.P0;
-    case "d1":
+    case "D1":
       return DigitalPin.P1;
-    case "d2":
+    case "D2":
       return DigitalPin.P2;
-    case "d3":
+    case "D3":
       return DigitalPin.P3;
-    case "d4":
+    case "D4":
       return DigitalPin.P4;
-    case "d5":
+    case "D5":
       return DigitalPin.P5;
   }
 }
