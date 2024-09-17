@@ -190,19 +190,20 @@ namespace pxsim.visuals {
     private setDigitalDisplay(index: number) {
       const pin = this.state.pins[index];
       U.assert((pin.mode & PinFlags.Digital) !== 0);
-      const value = pin.value > 0 ? "0%" : "100%";
+      const isOn = pin.value > 0;
 
       const pinFillEl = this.element.querySelector(`#pin${index} rect.level`);
       const pinLedFillEl = this.element.querySelector(`#pin${index} circle.level`);
       const pinLabelEl = this.element.querySelector(`#pin${index} text.label`);
 
-      pinFillEl.setAttribute("fill", "green");
-      pinFillEl.setAttribute("height", `${RECT_HEIGHT}`);
-      pinFillEl.setAttribute("y", `${RECT_Y - RECT_HEIGHT}`);
-
-      pinLedFillEl.setAttribute("fill", "red");
-      
-      pinLabelEl.innerHTML = value;
+      if (isOn) {
+        pinFillEl.setAttribute("fill", "green");
+        pinLedFillEl.setAttribute("fill", "red");
+      } else {
+        pinFillEl.setAttribute("fill", 'transparent');
+        pinLedFillEl.setAttribute("fill", "transparent");
+      }
+      pinLabelEl.innerHTML = isOn ? "ON" : "OFF";
     }
 
     private setAnalogDisplay(index: number) {
