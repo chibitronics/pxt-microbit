@@ -55,6 +55,7 @@
   "ChibiClip.readPinLevel|block": "read level $pin",
   "ChibiClip.setLightLevel|block": "set $pin level to $level",
   "ChibiClip.setLight|block": "set $pin to $on",
+  "ChibiClip.showEffectOnPin|block": "show $effect on $pin",
   "ChibiClip|block": "Chibi Clip",
   "Delimiters.CarriageReturn|block": "carriage return (\r)",
   "Delimiters.Colon|block": ":",
