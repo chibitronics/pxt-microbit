@@ -214,13 +214,21 @@ namespace pxsim.visuals {
     private setAnalogDisplay(index: number) {
       const pin = this.state.pins[index];
       U.assert((pin.mode & PinFlags.Analog) !== 0);
-      const percentageValue = Math.round((pin.value / ANALOG_PIN_MAX_VALUE) * 100);
+      const percentFraction = (pin.value / ANALOG_PIN_MAX_VALUE);
+      const percentageValue = Math.round(percentFraction * 100);
 
       const pinFillEl = this.element.querySelector(`#pin${index} rect.level`);
       const pinLedFillEl = this.element.querySelector(`#pin${index} circle.level`);
       const pinLabelEl = this.element.querySelector(`#pin${index} text.label`);
+
+      const fillHeight = RECT_HEIGHT * percentFraction
+      pinFillEl.setAttribute('fill', 'green');
+      pinFillEl.setAttribute('height', `${fillHeight}`);
+      pinFillEl.setAttribute('y', `${RECT_Y + (RECT_HEIGHT - fillHeight)}`);
       
       pinLabelEl.innerHTML = `${percentageValue}%`;
+      const alpha = percentFraction;
+      pinLedFillEl.setAttribute('fill', `rgba(255, 0, 0, ${alpha})`)
     }
 
     public updateTheme(): void {}
