@@ -70,7 +70,8 @@ namespace ChibiClip {
     } else if (value === 'LOW') {
       return pinValue === 0;
     }
-    throw new Error(`Parameter value=${value} is invalid`);
+    console.error(`Parameter value=${value} is invalid`);
+    return false;
   }
 
   //% block="read level $pin"
