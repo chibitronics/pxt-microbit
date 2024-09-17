@@ -93,6 +93,7 @@
   "Buffer.toString": "Convert a buffer to string assuming UTF8 encoding",
   "Buffer.unpack": "Reads numbers from the buffer according to the format",
   "Buffer.write": "Write contents of `src` at `dstOffset` in current buffer.",
+  "ChibiClip.onPinEvent": "Register an event handler for various pin conditions.",
   "ChibiClip.setLight": "Turns the light on or off at the given pin value.",
   "ChibiClip.setLightLevel": "Dims the light at the pin to the given brightness.",
   "EventCreationMode": "How to create the event.",
