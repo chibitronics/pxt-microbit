@@ -168,6 +168,7 @@ namespace pxsim.visuals {
           return;
         }
         const pin = this.state.pins[i];
+        this.resetPin(i);
 
         const isAnalog = (pin.mode & PinFlags.Analog) !== 0;
         const isDigital = (pin.mode & PinFlags.Digital) !== 0;
@@ -175,8 +176,6 @@ namespace pxsim.visuals {
           this.setAnalogDisplay(i);
         } else if (isDigital) {
           this.setDigitalDisplay(i);
-        } else {
-          this.resetPin(i);
         }
       }
     }
