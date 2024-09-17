@@ -93,8 +93,6 @@
   "Buffer.toString": "Convert a buffer to string assuming UTF8 encoding",
   "Buffer.unpack": "Reads numbers from the buffer according to the format",
   "Buffer.write": "Write contents of `src` at `dstOffset` in current buffer.",
-  "ChibiClip.activatePin": "Activate the pin at index",
-  "ChibiClip.deactivatePin": "Deactivate the pin at index",
   "ChibiClip.setLight": "Set the pin at index",
   "EventCreationMode": "How to create the event.",
   "EventCreationMode.CreateAndFire": "MicroBitEvent is initialised, and its event handlers are immediately fired (not suitable for use in interrupts!).",

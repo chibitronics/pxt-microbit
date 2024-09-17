@@ -14,65 +14,28 @@ namespace ChibiClip {
   //% pin.defl='d0'
   //% on.shadow="toggleOnOff"
   //% parts=chibiclip
-  export function setLight(pin: string, on: boolean): void {
-    // YIKES this is so hacky lol
-    const indexNumber = parseInt(pin[1]);
-    writeValueToPin(indexNumber, on ? 1 : 0);
-  }
-
-  /**
-   * Activate the pin at index
-   */
-  //% blockId=chibiclip_activate
-  //% block="activate pin at $index"
-  //% index.min=0 index.max=9
-  //% parts=chibiclip
-  export function activatePin(index: number): void {
-    writeValueToPin(index, 1);
-  }
-
-  /**
-   * Deactivate the pin at index
-   */
-  //% blockId=chibiclip_deactivate
-  //% block="deactivate pin at $index"
-  //% index.min=0 index.max=9
-  //% parts=chibiclip
-  export function deactivatePin(index: number): void {
-    writeValueToPin(index, 0);
+  export function setLight(pin: DigitalPinInput, on: boolean): void {
+    const digitalPin = stringToDigitalPin(pin);
+    const value = on ? 1 : 0;
+    pins.digitalWritePin(digitalPin, value);
   }
 }
 
-function writeValueToPin(index: number, value: number) {
-  const pin = indexToPin(index);
-  if (pin === null) {
-    return;
-  }
-  pins.digitalWritePin(pin, value);
-}
+type DigitalPinInput = "d0"|"d1"|"d2"|"d3"|"d4"|"d5";
 
-function indexToPin(index: number): DigitalPin | null {
-  switch (index) {
-    case 0:
+function stringToDigitalPin(pinInput : DigitalPinInput): DigitalPin {
+  switch (pinInput) {
+    case "d0":
       return DigitalPin.P0;
-    case 1:
+    case "d1":
       return DigitalPin.P1;
-    case 2:
+    case "d2":
       return DigitalPin.P2;
-    case 3:
+    case "d3":
       return DigitalPin.P3;
-    case 4:
+    case "d4":
       return DigitalPin.P4;
-    case 5:
+    case "d5":
       return DigitalPin.P5;
-    case 6:
-      return DigitalPin.P6;
-    case 7:
-      return DigitalPin.P7;
-    case 8:
-      return DigitalPin.P8;
-    case 9:
-      return DigitalPin.P9;
   }
-  return null;
 }

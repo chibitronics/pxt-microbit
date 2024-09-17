@@ -50,8 +50,6 @@
   "BeatFraction.Whole|block": "1",
   "Buffer|block": "Buffer",
   "Button.AB|block": "A+B",
-  "ChibiClip.activatePin|block": "activate pin at $index",
-  "ChibiClip.deactivatePin|block": "deactivate pin at $index",
   "ChibiClip.setLight|block": "set $pin to $on",
   "ChibiClip|block": "Chibi Clip",
   "Delimiters.CarriageReturn|block": "carriage return (\r)",
