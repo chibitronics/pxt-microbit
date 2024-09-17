@@ -4,22 +4,23 @@ const CLIP_HEIGHT = 120;
 const NUM_PINS = 6;
 
 const ITEM_WIDTH = 30;
-const GAP = 40;
+const GAP = 35;
 const SPACING = ITEM_WIDTH + GAP;
 const ALL_ITEMS_WIDTH = NUM_PINS * ITEM_WIDTH + GAP * (NUM_PINS - 1);
 const X_OFFSET = (CLIP_WIDTH - ALL_ITEMS_WIDTH) / 2;
-console.log('x offset', X_OFFSET);
 
 const RECT_WIDTH = ITEM_WIDTH;
 const RECT_HEIGHT = 50;
-const RECT_Y = 70;
+const RECT_Y = CLIP_HEIGHT - RECT_HEIGHT;
 const RECT_X_OFFSET = X_OFFSET;
 const RECT_X_DISTANCE = SPACING;
 const RECT_DEFAULT_FILL = 'gold';
 
+const CIRCLE_RECT_GAP = 10;
+
 const CIRCLE_RADIUS = ITEM_WIDTH / 2;
 const CIRCLE_DEFAULT_FILL = 'gray';
-const CIRCLE_Y = 40;
+const CIRCLE_Y = CLIP_HEIGHT - RECT_HEIGHT - CIRCLE_RADIUS * 2 - CIRCLE_RECT_GAP;
 const CIRCLE_X_OFFSET = X_OFFSET + CIRCLE_RADIUS;
 const CIRCLE_X_DISTANCE = SPACING;
 
@@ -60,10 +61,11 @@ namespace pxsim.visuals {
       pinGroup.append(defaultCircle);
 
       const levelCircle = createSvgElement('circle');
-      defaultCircle.classList.add('level');
-      defaultCircle.setAttribute('cx', `${CIRCLE_X_OFFSET + CIRCLE_X_DISTANCE * i}`);
-      defaultCircle.setAttribute('cy', `${CIRCLE_Y}`);
-      defaultCircle.setAttribute('r', `${CIRCLE_RADIUS}`);
+      levelCircle.classList.add('level');
+      levelCircle.setAttribute('cx', `${CIRCLE_X_OFFSET + CIRCLE_X_DISTANCE * i}`);
+      levelCircle.setAttribute('cy', `${CIRCLE_Y}`);
+      levelCircle.setAttribute('r', `${CIRCLE_RADIUS}`);
+      levelCircle.setAttribute('fill', 'transparent');
       pinGroup.append(levelCircle);
 
       const defaultRect = createSvgElement('rect');
@@ -81,6 +83,7 @@ namespace pxsim.visuals {
       levelRect.setAttribute('y', `${RECT_Y}`);
       levelRect.setAttribute('height', `${RECT_HEIGHT}`);
       levelRect.setAttribute('width', `${RECT_WIDTH}`);
+      levelRect.setAttribute('fill', 'transparent');
       pinGroup.append(levelRect);
 
       const labelText = createSvgElement('text');
@@ -88,7 +91,7 @@ namespace pxsim.visuals {
       labelText.setAttribute('x', `${TEXT_X_OFFSET + TEXT_X_DISTANCE * i}`);
       labelText.setAttribute('y', `${TEXT_Y}`);
       labelText.setAttribute('textAnchor', 'middle');
-      labelText.innerHTML = 'OFF';
+      // labelText.innerHTML = 'OFF';
       pinGroup.append(labelText);
     }
 
@@ -97,43 +100,11 @@ namespace pxsim.visuals {
 
   // For the instructions parts list
   export function mkChibiClipPart(xy: Coord = [0, 0]): SVGElAndSize {
-    const chibiClip = `<svg xmlns="http://www.w3.org/2000/svg" width="420" height="100">
-<g>
-  <rect width="420" height="120" rx="5" fill="lightblue"/>
-  <g id="pin0">
-      <circle class="default" cx="30" cy="50" r="10" fill="grey"/>
-      <circle class="level" cx="30" cy="50" r="10"/>
-      <rect class="default" width="20" height="${RECT_HEIGHT}" x="20" y="${RECT_Y}" fill="gold"/>
-      <rect class="level" width="20" height="0" x="20" y="${RECT_Y}" fill="green"/>
-      <text class="label" x="20" y="125" textAnchor="middle">ON</text>
-  </g>
-  <g id="pin1">
-      <circle cx="70" cy="50" r="10" fill="grey"/>
-      <rect x="60" y="${RECT_Y}" width="20" height=""${RECT_HEIGHT}" fill="gold"/>
-  </g>
-  <g id="pin2">
-      <circle cx="110" cy="50" r="10" fill="grey"/>
-      <rect  x="100" y="${RECT_Y}" width="20" height="${RECT_HEIGHT}" fill="gold"/>
-  </g>
-  <g id="pin3">
-      <circle cx="150" cy="50" r="10" fill="grey"/>
-      <rect width="20" height="${RECT_HEIGHT}" x="140" y="${RECT_Y}" fill="gold"/>
-  </g>
-  <g id="pin4">
-      <circle cx="190" cy="50" r="10" fill="grey"/>
-      <rect width="20" height="${RECT_HEIGHT}" x="180" y="${RECT_Y}" fill="gold"/>
-  </g>
-  <g id="pin5">
-      <circle cx="230" cy="50" r="10" fill="grey"/>
-      <rect x="220" y="${RECT_Y}" width="20" height="${RECT_HEIGHT}" fill="gold"/>
-  </g>
-</g>
-</svg>`;
     let [x, y] = xy;
     let l = x;
     let t = y;
-    let w = 420;
-    let h = 100;
+    let w = CLIP_WIDTH;
+    let h = CLIP_HEIGHT;
     // const el = svg.parseString(chibiClip).firstElementChild as SVGGElement;
     const el = generateSvg();
     return { el, x: l, y: t, w: w, h: h };
@@ -209,10 +180,11 @@ namespace pxsim.visuals {
       const pinLedFillEl = this.element.querySelector(`#pin${index} circle.level`);
       const pinLabelEl = this.element.querySelector(`#pin${index} text.label`);
 
-      // pinLedFillEl.setAttribute("fill", "");
-      // pinFillEl.setAttribute("height", "0")
-      // pinFillEl.setAttribute("y", `${RECT_Y}`);
-      // pinLabelEl.innerHTML = "";
+      pinLedFillEl.setAttribute("fill", "transparent");
+      pinFillEl.setAttribute("height", `${RECT_HEIGHT}`);
+      pinFillEl.setAttribute("y", `${RECT_Y}`);
+      pinFillEl.setAttribute("fill", "transparent");
+      pinLabelEl.innerHTML = "";
     }
 
     private setDigitalDisplay(index: number) {
