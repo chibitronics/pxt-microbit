@@ -11,7 +11,7 @@ Here's a screenshot of the WIP vizualization:
 
 In order to implement a custom visualization, we need to extend the MakeCode frontend code to include this visualization code and logic. This is why we need have this fork!
 
-## Build and run
+## Build and run instructions
 
 To build and run this locally:
 
@@ -24,3 +24,15 @@ There will be a lot of build messages in the console.
 When it has finished building, the script should open the MakeCode frontend in your browser!
 
 ### Heads up: Patched changes to `pxt`
+
+Note that we also needed to make changes to [https://github.com/microsoft/pxt](https://github.com/microsoft/pxt), which is the repository for the `pxt-core` npm module that `pxt-microbit` depends on. In this repository, we're implementing this by using the npm tool, `patch-package`, which applies a patch to `node_modules/pxt-core` after installing the module.
+
+If you want to update this patch, you should follow the instructions in [https://github.com/chibitronics/pxt](https://github.com/chibitronics/pxt)!
+
+## Deploying to prod -- be careful!! Pushes to `master` are auto-deployed :D
+
+**In this repo, we've set up a [GitHub workflow](https://github.com/chibitronics/pxt-microbit/blob/master/.github/workflows/main.yml) that automatically deploys changes to `master` branch to prod.**
+
+The MakeCode frontend is a (giant) static site, so we can deploy it on a simple static host. Our frontend is hosted on AWS S3.
+
+Running `npm run build` will create a production build of the frontend in `./built/packaged`. Because we have a GitHub workflow to manage pushes to prod, we shouldn't normally need to create a production build by running this command manually. (We might use it to test bugs that only occur in the production build and not the dev build, or if we are having problems with our GitHub workflow.)
