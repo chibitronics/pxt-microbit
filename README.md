@@ -31,8 +31,15 @@ If you want to update this patch, you should follow the instructions in [https:/
 
 ## Deploying to prod -- be careful!! Pushes to `master` are auto-deployed :D
 
-**In this repo, we've set up a [GitHub workflow](https://github.com/chibitronics/pxt-microbit/blob/master/.github/workflows/main.yml) that automatically deploys changes to `master` branch to prod.**
+The production site is here: [https://microbit.chibitronics.com/#editor](https://microbit.chibitronics.com/#editor)
+
 
 The MakeCode frontend is a (giant) static site, so we can deploy it on a simple static host. Our frontend is hosted on AWS S3.
 
 Running `npm run build` will create a production build of the frontend in `./built/packaged`. Because we have a GitHub workflow to manage pushes to prod, we shouldn't normally need to create a production build by running this command manually. (We might use it to test bugs that only occur in the production build and not the dev build, or if we are having problems with our GitHub workflow.)
+
+**In this repo, we've set up a [GitHub workflow](https://github.com/chibitronics/pxt-microbit/blob/master/.github/workflows/main.yml) that automatically deploys changes to `master` branch to prod.** 
+
+NOTE: Changes will take up to an hour to be reflected on microbit.chibitronics.com, due to Cloudflare caching.
+
+
