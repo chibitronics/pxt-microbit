@@ -20,7 +20,7 @@ const RECT_HEIGHT = 50;
 const RECT_Y = CLIP_HEIGHT - RECT_HEIGHT;
 const RECT_X_OFFSET = X_OFFSET;
 const RECT_X_DISTANCE = SPACING;
-const RECT_DEFAULT_FILL = 'gold';
+const RECT_DEFAULT_FILL = 'hsl(185.35, 66%, 54%)'; //chibiblue
 
 const CIRCLE_RECT_GAP = 10;
 
@@ -40,16 +40,41 @@ namespace pxsim.visuals {
     return document.createElementNS("http://www.w3.org/2000/svg", tagName);
   }
 
+  function ledGlow() {
+    const defsElement = createSvgElement("defs");
+    const filterElement = createSvgElement("filter");
+    defsElement.append(filterElement);
+    filterElement.setAttribute('id', 'ledGlow');
+    const feGaussianBlurElement = createSvgElement("feGaussianBlur");
+    feGaussianBlurElement.setAttribute("stdDeviation", "4");
+    feGaussianBlurElement.setAttribute("result", "coloredBlur");
+    filterElement.append(feGaussianBlurElement);
+    const feMergeElement = createSvgElement("feMerge");
+    filterElement.append(feMergeElement);
+    const feMergeNodeElement1 = createSvgElement("feMergeNode");
+    feMergeNodeElement1.setAttribute("in", "coloredBlur")
+    const feMergeNodeElement2 = createSvgElement("feMergeNode");
+    feMergeNodeElement2.setAttribute("in", "coloredBlur")
+    const feMergeNodeElement3 = createSvgElement("feMergeNode");
+    feMergeNodeElement3.setAttribute("in", "SourceGraphic");
+    feMergeElement.append(feMergeNodeElement1);
+    feMergeElement.append(feMergeNodeElement2);
+    feMergeElement.append(feMergeNodeElement3);
+    return defsElement;
+  }
+
   function generateSvg(): SVGAElement {
     const root = svg.parseString(`<svg xmlns="http://www.w3.org/2000/svg" width="${CLIP_WIDTH}" height="${CLIP_HEIGHT}"></svg>`);
     const group = createSvgElement('g');
+    const defEl = ledGlow();
+    group.append(defEl);
     root.append(group);
 
     // Add clip element
     const clipElement = createSvgElement('rect');
-    clipElement.setAttribute('width', `${CLIP_WIDTH}`); 
-    clipElement.setAttribute('height', `${CLIP_HEIGHT}`); 
-    clipElement.setAttribute('fill', `lightblue`); 
+    clipElement.setAttribute('width', `${CLIP_WIDTH}`);
+    clipElement.setAttribute('height', `${CLIP_HEIGHT}`);
+    clipElement.setAttribute('fill', 'hsl(44.772, 100%, 61%)');//chibiyellow
     group.append(clipElement);
 
     // Add pins
@@ -202,8 +227,12 @@ namespace pxsim.visuals {
       const pinLabelEl = this.element.querySelector(`#pin${index} text.label`);
 
       if (isOn) {
-        pinFillEl.setAttribute("fill", "green");
-        pinLedFillEl.setAttribute("fill", "red");
+        pinFillEl.setAttribute("fill", `hsl(112.5, 100%, 67%)`);//chibineongreen
+        pinLedFillEl.setAttribute("fill", 'rgb(255, 255, 255)');
+        pinLedFillEl.setAttribute("stroke", 'rgb(235, 235, 235)');
+        pinLedFillEl.setAttribute("stroke-width", '3');
+        pinLedFillEl.setAttribute("stroke-miterlimit", '10');
+        pinLedFillEl.setAttribute("filter", 'url("#ledGlow")');//chibiglow
       } else {
         pinFillEl.setAttribute("fill", 'transparent');
         pinLedFillEl.setAttribute("fill", "transparent");
@@ -222,13 +251,17 @@ namespace pxsim.visuals {
       const pinLabelEl = this.element.querySelector(`#pin${index} text.label`);
 
       const fillHeight = RECT_HEIGHT * percentFraction
-      pinFillEl.setAttribute('fill', 'green');
+      pinFillEl.setAttribute('fill', 'hsl(112.5, 100%, 67%)'); //chibineongreen
       pinFillEl.setAttribute('height', `${fillHeight}`);
       pinFillEl.setAttribute('y', `${RECT_Y + (RECT_HEIGHT - fillHeight)}`);
-      
+
       pinLabelEl.innerHTML = `${percentageValue}%`;
       const alpha = percentFraction;
-      pinLedFillEl.setAttribute('fill', `rgba(255, 0, 0, ${alpha})`)
+      pinLedFillEl.setAttribute('fill', `rgba(255, 255, 255, ${alpha})`)
+      pinLedFillEl.setAttribute("stroke", 'rgb(235, 235, 235)');
+      pinLedFillEl.setAttribute("stroke-width", '3');
+      pinLedFillEl.setAttribute("stroke-miterlimit", '10');
+      pinLedFillEl.setAttribute("filter", 'url("#ledGlow")');//chibiglow
     }
 
     public updateTheme(): void {}
