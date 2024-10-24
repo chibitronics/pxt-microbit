@@ -258,7 +258,7 @@ namespace pxsim.visuals {
       pinLabelEl.innerHTML = `${percentageValue}%`;
       const alpha = percentFraction;
       pinLedFillEl.setAttribute('fill', `rgba(255, 255, 255, ${alpha})`)
-      pinLedFillEl.setAttribute("stroke", 'rgb(235, 235, 235)');
+      pinLedFillEl.setAttribute("stroke", `rgb(235, 235, 235, ${alpha})`);
       pinLedFillEl.setAttribute("stroke-width", '3');
       pinLedFillEl.setAttribute("stroke-miterlimit", '10');
       pinLedFillEl.setAttribute("filter", 'url("#ledGlow")');//chibiglow
