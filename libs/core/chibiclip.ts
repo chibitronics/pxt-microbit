@@ -10,8 +10,20 @@ type DigitalPinEventParameter =
 type DigitalPinValueType = "HIGH" | "LOW";
 type EffectString = "twinkle" | "heartbeat" | "blink" | "sos";
 
-const EVENT1_PERIOD = 5000; // Fire every 5 seconds
-const EVENT2_PERIOD = 3000; // Fire every 3 seconds
+enum EffectStatus {
+  NoEffect,
+  EffectInProgress,
+  StopEffectRequested,
+}
+
+const pinEffectStatuses: Array<EffectStatus> = [
+  EffectStatus.NoEffect, // Pin 0
+  EffectStatus.NoEffect, // Pin 1
+  EffectStatus.NoEffect, // Pin 2
+  EffectStatus.NoEffect, // Pin 3
+  EffectStatus.NoEffect, // Pin 4
+  EffectStatus.NoEffect, // Pin 5
+];
 
 /*
  * Visualization for the Chibi Clip.
@@ -35,6 +47,12 @@ namespace ChibiClip {
     const digitalPin = stringToDigitalPin(pin);
     const value = on ? 1 : 0;
     pins.digitalWritePin(digitalPin, value);
+    const pinIndex = stringToPinNumber(pin);
+
+    // Check to see if there's an effect in progress and if so, stop.
+    if (pinEffectStatuses[pinIndex] === EffectStatus.EffectInProgress) {
+      pinEffectStatuses[pinIndex] = EffectStatus.StopEffectRequested;
+    }
   }
 
   /**
@@ -57,6 +75,12 @@ namespace ChibiClip {
     const analogPin = stringToAnalogPin(pin);
     const writePinValue = Math.round((level / 100.0) * ANALOG_PIN_MAX_VALUE);
     pins.analogWritePin(analogPin, writePinValue);
+    const pinIndex = stringToPinNumber(pin);
+
+    // Check to see if there's an effect in progress and if so, stop.
+    if (pinEffectStatuses[pinIndex] === EffectStatus.EffectInProgress) {
+      pinEffectStatuses[pinIndex] = EffectStatus.StopEffectRequested;
+    }
   }
 
   /**
@@ -79,22 +103,29 @@ namespace ChibiClip {
     pin: AnalogPinBlockParameter
   ) {
     const analogPin = stringToAnalogPin(pin);
+    const pinIndex = stringToPinNumber(pin);
+    pinEffectStatuses[pinIndex] = EffectStatus.EffectInProgress;
+
+    // Executes the animation
+    const commands = getCommandsForEffect(effect);
+    executeCommands(commands, pinIndex, analogPin);
+
+    pinEffectStatuses[pinIndex] = EffectStatus.NoEffect;
+  }
+
+  function getCommandsForEffect(effect: EffectString) {
     switch (effect) {
       case "twinkle":
-        twinkle(analogPin);
-        break;
+        return twinkle();
 
       case "heartbeat":
-        heartbeat(analogPin);
-        break;
+        return heartbeat();
 
       case "blink":
-        blink(analogPin);
-        break;
+        return blink();
 
       case "sos":
-        sos(analogPin);
-        break;
+        return sos();
     }
   }
 
@@ -237,59 +268,117 @@ function stringToAnalogPin(pinInput: AnalogPinBlockParameter): AnalogPin {
   }
 }
 
-function twinkle(pin: AnalogPin, tempo = 16) {
+function stringToPinNumber(pinInput: string): number {
+  if (pinInput.length !== 2) {
+    throw `Parameter is in unexpected format: ${pinInput}`;
+  }
+  return parseInt(pinInput[1]);
+}
+
+function twinkle(tempo = 16) {
   let current = ANALOG_PIN_MAX_VALUE / 2;
+  const allCommands: Array<Command> = [];
   for (let i = 0; i < tempo * 8; i++) {
-    current = fadeTo(
+    const { commands, endingValue } = generateCommandsForFade(
       current,
       getRandomInt(0, ANALOG_PIN_MAX_VALUE),
       tempo,
-      pin,
       3
     );
+    append(allCommands, commands);
+    current = endingValue;
   }
+  return allCommands;
 }
 
-function blink(pin: AnalogPin, tempo = 16) {
-  fadeTo(0, ANALOG_PIN_MAX_VALUE, tempo, pin, 7);
-  fadeTo(ANALOG_PIN_MAX_VALUE, 0, tempo, pin, 7);
+function blink(tempo = 16) {
+  const { commands: firstCommands } = generateCommandsForFade(
+    0,
+    ANALOG_PIN_MAX_VALUE,
+    tempo,
+    7
+  );
+  const { commands: secondCommands } = generateCommandsForFade(
+    ANALOG_PIN_MAX_VALUE,
+    0,
+    tempo,
+    7
+  );
+  return firstCommands.concat(secondCommands);
 }
 
-function heartbeat(pin: AnalogPin, tempo = 50) {
-  let current = 0;
+function heartbeat(tempo = 50) {
   if (tempo > 50) tempo = 50;
 
-  current = fadeTo(current, 768, 8, pin, 1);
-  current = fadeTo(current, 16, 8, pin, 1);
-  basic.pause(80);
-  basic.pause((13 - tempo / 4) * 15);
+  let allCommands: Array<Command> = [];
 
-  current = fadeTo(current, ANALOG_PIN_MAX_VALUE, 8, pin, 1);
-  current = fadeTo(current, 0, 8, pin, 1);
-  basic.pause(214);
-  basic.pause((13 - tempo / 4) * 37);
+  // The first up and down of the heartbeat
+  const { commands, endingValue } = generateCommandsForFade(0, 768, 8, 1);
+  append(allCommands, commands);
+  const { commands: downCommands, endingValue: downEndingValue } =
+    generateCommandsForFade(endingValue, 16, 8, 1);
+  append(allCommands, downCommands);
+
+  // Pause for a bit
+  allCommands.push({ type: CommandType.Pause, durationMs: 80 });
+  allCommands.push({
+    type: CommandType.Pause,
+    durationMs: (13 - tempo / 4) * 15,
+  });
+
+  // The second up and down of the heartbeat
+  const { commands: upCommands, endingValue: upEndingvalue } =
+    generateCommandsForFade(downEndingValue, ANALOG_PIN_MAX_VALUE, 8, 1);
+  append(allCommands, upCommands);
+  const { commands: downAgainCommands, endingValue: downAgainEndingValue } =
+    generateCommandsForFade(upEndingvalue, 0, 8, 1);
+  append(allCommands, downAgainCommands);
+
+  // Pause again
+  allCommands.push({ type: CommandType.Pause, durationMs: 214 });
+  allCommands.push({
+    type: CommandType.Pause,
+    durationMs: (13 - tempo / 4) * 37,
+  });
+  return allCommands;
 }
 
-function sos(pin: AnalogPin, tempo = 20) {
+function sos(tempo = 20) {
+  const allCommands: Array<Command> = [];
+  const shortPauseMs = (tempo / 4) * 20;
+  const longerPauseMs = (tempo / 4) * 50;
+  const longestPauseMs = (tempo / 4) * 100;
   for (let i = 0; i < 3; i++) {
-    pins.analogWritePin(pin, ANALOG_PIN_MAX_VALUE);
-    basic.pause((tempo / 4) * 20);
-    pins.analogWritePin(pin, 0);
-    basic.pause((tempo / 4) * 20);
+    allCommands.push({ type: CommandType.Write, value: ANALOG_PIN_MAX_VALUE });
+    allCommands.push({ type: CommandType.Pause, durationMs: shortPauseMs });
+    allCommands.push({ type: CommandType.Write, value: 0 });
+    allCommands.push({ type: CommandType.Pause, durationMs: shortPauseMs });
   }
   for (let i = 0; i < 3; i++) {
-    pins.analogWritePin(pin, ANALOG_PIN_MAX_VALUE);
-    basic.pause((tempo / 4) * 50);
-    pins.analogWritePin(pin, 0);
-    basic.pause((tempo / 4) * 20);
+    allCommands.push({ type: CommandType.Write, value: ANALOG_PIN_MAX_VALUE });
+    allCommands.push({ type: CommandType.Pause, durationMs: longerPauseMs });
+    allCommands.push({ type: CommandType.Write, value: 0 });
+    allCommands.push({ type: CommandType.Pause, durationMs: shortPauseMs });
   }
   for (let i = 0; i < 3; i++) {
-    pins.analogWritePin(pin, ANALOG_PIN_MAX_VALUE);
-    basic.pause((tempo / 4) * 20);
-    pins.analogWritePin(pin, 0);
-    basic.pause((tempo / 4) * 20);
+    allCommands.push({ type: CommandType.Write, value: ANALOG_PIN_MAX_VALUE });
+    allCommands.push({ type: CommandType.Pause, durationMs: shortPauseMs });
+    allCommands.push({ type: CommandType.Write, value: 0 });
+    allCommands.push({ type: CommandType.Pause, durationMs: shortPauseMs });
   }
-  basic.pause((tempo / 4) * 100);
+  allCommands.push({ type: CommandType.Pause, durationMs: longestPauseMs });
+  return allCommands;
+}
+
+// Argh this is a bizarre function;
+// Basically for some reason, it seems Microsoft's MakeCode compiler is unhappy with
+// allCommands.push(...array) -- because array might be length 0
+// (even though this is perfectly fine JavaScript / TypeScript normally)
+// So this helper function is workaround for this.
+function append(destination: Array<Command>, itemsToAppend: Array<Command>) {
+  for (const item of itemsToAppend) {
+    destination.push(item);
+  }
 }
 
 function getRandomInt(min: number, max: number) {
@@ -298,19 +387,76 @@ function getRandomInt(min: number, max: number) {
   return Math.floor(Math.random() * (maxFloored - minCeiled) + minCeiled); // The maximum is exclusive and the minimum is inclusive
 }
 
-function fadeTo(
+function generateCommandsForFade(
   startingValue: number,
   targetValue: number,
   fadeDelta: number,
-  pin: AnalogPin,
   pauseInMs: number
 ) {
+  const commands: Array<Command> = [];
   let currentValue = startingValue;
   while (Math.abs(currentValue - targetValue) > fadeDelta) {
-    pins.analogWritePin(pin, currentValue);
+    const writeCommand: WriteCommand = {
+      type: CommandType.Write,
+      value: currentValue,
+    };
+    commands.push(writeCommand);
+
     currentValue =
       currentValue + (targetValue - currentValue > 0 ? fadeDelta : -fadeDelta);
-    basic.pause(pauseInMs);
+
+    const pauseCommand: PauseCommand = {
+      type: CommandType.Pause,
+      durationMs: pauseInMs,
+    };
+    commands.push(pauseCommand);
   }
-  return currentValue;
+  return { commands, endingValue: currentValue };
+}
+
+enum CommandType {
+  Pause,
+  Write,
+}
+
+interface PauseCommand {
+  type: CommandType.Pause;
+  durationMs: number;
+}
+
+interface WriteCommand {
+  type: CommandType.Write;
+  value: number;
+}
+
+type Command = PauseCommand | WriteCommand;
+
+function executeCommands(
+  commands: Array<Command>,
+  pinIndex: number,
+  pin: AnalogPin
+) {
+  // NOTE: We're doing something a bit weird here --
+  // If this were regular JavaScript, we would want to execute each iteration of this loop in something like a setTimeout or a
+  // requestAnimationFrame, because JavaScript is single threaded, and we're waiting for a function outside of us to
+  // potentially reset the value of pinEffectStatuses.
+  // However, two things:
+  //   1. The pxt coding environment in which this code executes, *doesn't* support rAF or setTimeout
+  //   2. The pxt coding environment _seems_ to call different control blocks either in a separate thread or some other way that is interruptible....
+  // So for some reason this works with a for-loop, even though it wouldn't work in regular JavaScript.
+  for (const command of commands) {
+    // Check for interrupt -- immediately return if stop effect is requested
+    if (pinEffectStatuses[pinIndex] === EffectStatus.StopEffectRequested) {
+      return;
+    }
+
+    switch (command.type) {
+      case CommandType.Pause:
+        basic.pause(command.durationMs);
+        continue;
+      case CommandType.Write:
+        pins.analogWritePin(pin, command.value);
+        continue;
+    }
+  }
 }
