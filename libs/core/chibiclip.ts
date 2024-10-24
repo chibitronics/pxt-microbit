@@ -48,7 +48,11 @@ namespace ChibiClip {
     const value = on ? 1 : 0;
     pins.digitalWritePin(digitalPin, value);
     const pinIndex = stringToPinNumber(pin);
-    pinEffectStatuses[pinIndex] = EffectStatus.StopEffectRequested;
+
+    // Check to see if there's an effect in progress and if so, stop.
+    if (pinEffectStatuses[pinIndex] === EffectStatus.EffectInProgress) {
+      pinEffectStatuses[pinIndex] = EffectStatus.StopEffectRequested;
+    }
   }
 
   /**
@@ -72,7 +76,11 @@ namespace ChibiClip {
     const writePinValue = Math.round((level / 100.0) * ANALOG_PIN_MAX_VALUE);
     pins.analogWritePin(analogPin, writePinValue);
     const pinIndex = stringToPinNumber(pin);
-    pinEffectStatuses[pinIndex] = EffectStatus.StopEffectRequested;
+
+    // Check to see if there's an effect in progress and if so, stop.
+    if (pinEffectStatuses[pinIndex] === EffectStatus.EffectInProgress) {
+      pinEffectStatuses[pinIndex] = EffectStatus.StopEffectRequested;
+    }
   }
 
   /**
@@ -98,6 +106,7 @@ namespace ChibiClip {
     const pinIndex = stringToPinNumber(pin);
     pinEffectStatuses[pinIndex] = EffectStatus.EffectInProgress;
 
+    // Executes the animation
     const commands = getCommandsForEffect(effect);
     executeCommands(commands, pinIndex, analogPin);
 
@@ -392,8 +401,10 @@ function generateCommandsForFade(
       value: currentValue,
     };
     commands.push(writeCommand);
+
     currentValue =
       currentValue + (targetValue - currentValue > 0 ? fadeDelta : -fadeDelta);
+
     const pauseCommand: PauseCommand = {
       type: CommandType.Pause,
       durationMs: pauseInMs,
@@ -433,7 +444,6 @@ function executeCommands(
   //   1. The pxt coding environment in which this code executes, *doesn't* support rAF or setTimeout
   //   2. The pxt coding environment _seems_ to call different control blocks either in a separate thread or some other way that is interruptible....
   // So for some reason this works with a for-loop, even though it wouldn't work in regular JavaScript.
-  //
   for (const command of commands) {
     // Check for interrupt -- immediately return if stop effect is requested
     if (pinEffectStatuses[pinIndex] === EffectStatus.StopEffectRequested) {
