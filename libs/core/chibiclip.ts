@@ -299,13 +299,14 @@ function blink(tempo = 16) {
 function heartbeat(tempo = 50) {
   if (tempo > 50) tempo = 50;
 
-  const allCommands: Array<Command> = [];
+  let allCommands: Array<Command> = [];
 
   // The first up and down of the heartbeat
-  const animateUp = generateCommandsForFade(0, 768, 8, 1);
-  append(allCommands, animateUp.commands);
-  const animateDown = generateCommandsForFade(animateUp.endingValue, 16, 8, 1);
-  append(allCommands, animateDown.commands);
+  const { commands, endingValue } = generateCommandsForFade(0, 768, 8, 1);
+  append(allCommands, commands);
+  const { commands: downCommands, endingValue: downEndingValue } =
+    generateCommandsForFade(endingValue, 16, 8, 1);
+  append(allCommands, downCommands);
 
   // Pause for a bit
   allCommands.push({ type: CommandType.Pause, durationMs: 80 });
@@ -315,15 +316,12 @@ function heartbeat(tempo = 50) {
   });
 
   // The second up and down of the heartbeat
-  const upAgain = generateCommandsForFade(
-    animateDown.endingValue,
-    ANALOG_PIN_MAX_VALUE,
-    8,
-    1
-  );
-  append(allCommands, upAgain.commands);
-  const downAgain = generateCommandsForFade(upAgain.endingValue, 0, 8, 1);
-  append(allCommands, downAgain.commands);
+  const { commands: upCommands, endingValue: upEndingvalue } =
+    generateCommandsForFade(downEndingValue, ANALOG_PIN_MAX_VALUE, 8, 1);
+  append(allCommands, upCommands);
+  const { commands: downAgainCommands, endingValue: downAgainEndingValue } =
+    generateCommandsForFade(upEndingvalue, 0, 8, 1);
+  append(allCommands, downAgainCommands);
 
   // Pause again
   allCommands.push({ type: CommandType.Pause, durationMs: 214 });
@@ -340,24 +338,24 @@ function sos(tempo = 20) {
   const longerPauseMs = (tempo / 4) * 50;
   const longestPauseMs = (tempo / 4) * 100;
   for (let i = 0; i < 3; i++) {
-    allCommands.push({ type: CommandType.Write, value: ANALOG_PIN_MAX_VALUE })
-    allCommands.push({ type: CommandType.Pause, durationMs: shortPauseMs })
-    allCommands.push({ type: CommandType.Write, value: 0 })
-    allCommands.push({ type: CommandType.Pause, durationMs: shortPauseMs })
+    allCommands.push({ type: CommandType.Write, value: ANALOG_PIN_MAX_VALUE });
+    allCommands.push({ type: CommandType.Pause, durationMs: shortPauseMs });
+    allCommands.push({ type: CommandType.Write, value: 0 });
+    allCommands.push({ type: CommandType.Pause, durationMs: shortPauseMs });
   }
   for (let i = 0; i < 3; i++) {
-    allCommands.push({ type: CommandType.Write, value: ANALOG_PIN_MAX_VALUE })
-    allCommands.push({ type: CommandType.Pause, durationMs: longerPauseMs })
-    allCommands.push({ type: CommandType.Write, value: 0 })
-    allCommands.push({ type: CommandType.Pause, durationMs: shortPauseMs })
+    allCommands.push({ type: CommandType.Write, value: ANALOG_PIN_MAX_VALUE });
+    allCommands.push({ type: CommandType.Pause, durationMs: longerPauseMs });
+    allCommands.push({ type: CommandType.Write, value: 0 });
+    allCommands.push({ type: CommandType.Pause, durationMs: shortPauseMs });
   }
   for (let i = 0; i < 3; i++) {
-    allCommands.push({ type: CommandType.Write, value: ANALOG_PIN_MAX_VALUE })
-    allCommands.push({ type: CommandType.Pause, durationMs: shortPauseMs })
-    allCommands.push({ type: CommandType.Write, value: 0 })
-    allCommands.push({ type: CommandType.Pause, durationMs: shortPauseMs })
+    allCommands.push({ type: CommandType.Write, value: ANALOG_PIN_MAX_VALUE });
+    allCommands.push({ type: CommandType.Pause, durationMs: shortPauseMs });
+    allCommands.push({ type: CommandType.Write, value: 0 });
+    allCommands.push({ type: CommandType.Pause, durationMs: shortPauseMs });
   }
-  allCommands.push({ type: CommandType.Pause, durationMs: longestPauseMs })
+  allCommands.push({ type: CommandType.Pause, durationMs: longestPauseMs });
   return allCommands;
 }
 
@@ -426,8 +424,8 @@ function executeCommands(
   pin: AnalogPin
 ) {
   // NOTE: We're doing something a bit weird here --
-  // If this were regular JavaScript, we would want to execute each iteration of this loop in something like a setTimeout or a 
-  // requestAnimationFrame, because JavaScript is single threaded, and we're waiting for a function outside of us to 
+  // If this were regular JavaScript, we would want to execute each iteration of this loop in something like a setTimeout or a
+  // requestAnimationFrame, because JavaScript is single threaded, and we're waiting for a function outside of us to
   // potentially reset the value of pinEffectStatuses.
   // However, two things:
   //   1. The pxt coding environment in which this code executes, *doesn't* support rAF or setTimeout
