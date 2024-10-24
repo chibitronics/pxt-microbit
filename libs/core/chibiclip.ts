@@ -47,6 +47,8 @@ namespace ChibiClip {
     const digitalPin = stringToDigitalPin(pin);
     const value = on ? 1 : 0;
     pins.digitalWritePin(digitalPin, value);
+    const pinIndex = stringToPinNumber(pin);
+    pinEffectStatuses[pinIndex] = EffectStatus.StopEffectRequested;
   }
 
   /**
