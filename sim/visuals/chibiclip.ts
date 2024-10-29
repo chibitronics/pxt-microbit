@@ -234,12 +234,6 @@ namespace pxsim.visuals {
     const x8 = x1;
     const y8 = y7;
 
-    // 1- 30,120
-    // 2- 60,120
-    // 3- 60,220
-    // 4- 360,220
-    // 5- 360,120
-    // 6- 390,120 390,250 30,250
     const points = `${x1},${y1} ${x2},${y2} ${x3},${y3} ${x4},${y4} ${x5},${y5} ${x6},${y6} ${x7},${y7} ${x8},${y8}`;
     polygon.setAttribute("points", points);
     polygon.setAttribute("fill", WIRE_COLOR);
