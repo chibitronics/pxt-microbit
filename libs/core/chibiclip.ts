@@ -25,11 +25,82 @@ const pinEffectStatuses: Array<EffectStatus> = [
   EffectStatus.NoEffect, // Pin 5
 ];
 
+type PinCallback = () => void;
+
+type PinEventHandler = {
+  onPressed: PinCallback | null;
+  onReleased: PinCallback | null;
+  onChanged: PinCallback | null;
+  onLow: PinCallback | null;
+  onHigh: PinCallback | null;
+};
+
+const TOTAL_GPIO_PINS = 6;
+
+const pinToEventHandlers: Array<PinEventHandler> = [];
+
+const prevPinValues: Array<number> = [
+  0, // Pin 0
+  0, // Pin 1
+  0, // Pin 2
+  0, // Pin 3
+  0, // Pin 4
+  0, // Pin 5
+];
+
 /*
  * Visualization for the Chibi Clip.
  */
 //% color=#f91b4f weight=100 icon="\uf0c6" block="Chibi Clip" groups="['Lights', 'Sensing']"
 namespace ChibiClip {
+  function init() {
+    // Initialize empty event handlers.
+    for (let i = 0; i < TOTAL_GPIO_PINS; i++) {
+      const empty: PinEventHandler = {
+        onPressed: null,
+        onReleased: null,
+        onChanged: null,
+        onLow: null,
+        onHigh: null,
+      };
+      pinToEventHandlers[i] = empty;
+    }
+
+    console.log('init forever loop');
+
+    // Add a forever loop in the namespace to poll for pin event changes.
+    basic.forever(() => {
+      for (let pinIndex = 0; pinIndex < TOTAL_GPIO_PINS; pinIndex++) {
+        const prevPinValue = prevPinValues[pinIndex];
+        const currentPinValue = pins.digitalReadPin(indexToDigitalPin(pinIndex));
+        prevPinValues[pinIndex] = currentPinValue;
+
+        const handlersForPin = pinToEventHandlers[pinIndex];
+
+        const isChanged = prevPinValue !== currentPinValue;
+        const lowToHigh = isChanged && currentPinValue > 0;
+        const highToLow = isChanged && currentPinValue === 0;
+
+        if (isChanged && handlersForPin.onChanged) {
+          handlersForPin.onChanged();
+        }
+        if (lowToHigh && handlersForPin.onHigh) {
+          handlersForPin.onHigh();
+        }
+        if (lowToHigh && handlersForPin.onPressed) {
+          handlersForPin.onPressed();
+        }
+        if (highToLow && handlersForPin.onLow) {
+          handlersForPin.onLow();
+        }
+        if (highToLow && handlersForPin.onReleased) {
+          handlersForPin.onReleased();
+        }
+      }
+    });
+  }
+  init();
+
   /**
    * Turns the light on or off at the given pin value.
    */
@@ -194,43 +265,27 @@ namespace ChibiClip {
     eventType: DigitalPinEventParameter,
     handler: () => void
   ) {
-    const digitalPin = stringToDigitalPin(pin);
+    const pinIndex = stringToPinNumber(pin);
 
-    let prevPinValue = pins.digitalReadPin(digitalPin);
-    // Start polling the pin value and fire whenever there's a change.
-    // TODO: See if there's a better way to do this.
-    basic.forever(() => {
-      let currentPinValue = pins.digitalReadPin(digitalPin);
-      // console.log(`prev: ${prevPinValue}, current: ${currentPinValue}`);
-      switch (eventType) {
-        case "pressed":
-          if (prevPinValue === 0 && currentPinValue > 0) {
-            handler();
-          }
-          break;
-        case "released":
-          if (prevPinValue > 0 && currentPinValue === 0) {
-            handler();
-          }
-          break;
-        case "changed":
-          if (prevPinValue !== currentPinValue) {
-            handler();
-          }
-          break;
-        case "HIGH":
-          if (currentPinValue > 0) {
-            handler();
-          }
-          break;
-        case "LOW":
-          if (currentPinValue === 0) {
-            handler();
-          }
-          break;
-      }
-      prevPinValue = currentPinValue;
-    });
+    switch (eventType) {
+      case "pressed":
+        pinToEventHandlers[pinIndex].onPressed = handler;
+        break;
+      case "released":
+        pinToEventHandlers[pinIndex].onReleased = handler;
+        break;
+      case "changed":
+        pinToEventHandlers[pinIndex].onChanged = handler;
+        break;
+      case "HIGH":
+        pinToEventHandlers[pinIndex].onHigh = handler;
+        break;
+      case "LOW":
+        pinToEventHandlers[pinIndex].onLow = handler;
+        break;
+    }
+    console.log('setting event handlers');
+    console.log(pinToEventHandlers[pinIndex]);
   }
 }
 
@@ -248,6 +303,25 @@ function stringToDigitalPin(pinInput: DigitalPinBlockParameter): DigitalPin {
       return DigitalPin.P4;
     case "D5":
       return DigitalPin.P5;
+  }
+}
+
+function indexToDigitalPin(pinIndex: number): DigitalPin {
+  switch (pinIndex) {
+    case 0:
+      return DigitalPin.P0;
+    case 1:
+      return DigitalPin.P1;
+    case 2:
+      return DigitalPin.P2;
+    case 3:
+      return DigitalPin.P3;
+    case 4:
+      return DigitalPin.P4;
+    case 5:
+      return DigitalPin.P5;
+    default:
+      throw `not a valid index: ${pinIndex}`;
   }
 }
 
