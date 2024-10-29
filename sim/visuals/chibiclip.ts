@@ -443,7 +443,7 @@ namespace pxsim.visuals {
     }
 
     public updateState(): void {
-      for (let i = 0; i < TOTAL_NUMBER_OF_PINS; i++) {
+      for (let i = 0; i < NUMBER_OF_GPIO_PINS; i++) {
         const pinLoaded = this.element.querySelector(`#pin${i}`);
         if (!pinLoaded) {
           return;
