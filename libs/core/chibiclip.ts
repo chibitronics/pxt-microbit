@@ -66,8 +66,6 @@ namespace ChibiClip {
       pinToEventHandlers[i] = empty;
     }
 
-    console.log('init forever loop');
-
     // Add a forever loop in the namespace to poll for pin event changes.
     basic.forever(() => {
       for (let pinIndex = 0; pinIndex < TOTAL_GPIO_PINS; pinIndex++) {
@@ -284,8 +282,6 @@ namespace ChibiClip {
         pinToEventHandlers[pinIndex].onLow = handler;
         break;
     }
-    console.log('setting event handlers');
-    console.log(pinToEventHandlers[pinIndex]);
   }
 }
 
