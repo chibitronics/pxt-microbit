@@ -358,6 +358,7 @@ namespace pxsim.visuals {
     lightGroup.append(lightGraphicBottom);
 
     const lightGraphicTop = createLightTriangle(i, 'triangle-light');
+    lightGraphicTop.classList.add("off");
     lightGroup.append(lightGraphicTop);
 
     group.append(lightGroup);
@@ -495,6 +496,14 @@ namespace pxsim.visuals {
             
             .wire polygon.triangle-light {
               fill: white;
+              stroke: rgb(235, 235, 235);
+              stroke-width: 3;
+              stroke-miterlimit: 10;
+              filter: url("#ledGlow");
+            }
+            
+            .wire polygon.triangle-light.off {
+              display: none;
             }
 
             .wire.chibi-visible {
