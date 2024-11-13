@@ -321,7 +321,6 @@ namespace pxsim.visuals {
   function createLightFromPinToGround(i: number, hasJump: boolean) {
     const group = createSvgElement("g");
     group.setAttribute("id", `${getWireIdName(i, LIGHT_GROUP_CLASS_NAME)}`);
-    group.classList.add("circuit");
 
     const startingX = RECT_X_OFFSET + RECT_X_DISTANCE * i + RECT_WIDTH / 2;
     const bottomOfClipY = RECT_Y + RECT_HEIGHT;
@@ -340,7 +339,6 @@ namespace pxsim.visuals {
       const jumpEndLength = SWITCH_WIRE_HEIGHT + LIGHT_JUMP_HEIGHT / 2;
       const jumpEndY = y1 + jumpEndLength;
       const bezierX = `${BEZIER_CURVE_HEIGHT + x1}`;
-      const bezierEndX = RECT_X_OFFSET + RECT_X_DISTANCE * i;
       const bezier = `C ${bezierX} ${jumpStartY} ${bezierX} ${jumpEndY} ${x1} ${jumpEndY}`
 
       const lineEndY = y1 + LIGHT_WIRE_HEIGHT;
@@ -622,6 +620,7 @@ namespace pxsim.visuals {
         ToggleValue.OffAndEnabled
       );
       this.resetGap(pinIndex, pin);
+      this.redrawLightWiresIfNeeded(pinIndex);
     }
 
     private enableSwitch(pinIndex: number) {
@@ -647,10 +646,21 @@ namespace pxsim.visuals {
         pin.digitalWritePin(0);
       }
     }
+    
+    private redrawLightWiresIfNeeded(removedCircuitPinIndex: number) {
+      // If a pin after me has a light
+      for (let i = removedCircuitPinIndex + 1; i < NUMBER_OF_GPIO_PINS; i++) {
+        const value = this.getToggleValue(i, LIGHT_GROUP_CLASS_NAME);
+        if (value === ToggleValue.On) {
+          this.removeCircuitForLight(i);
+          this.addCircuitForLight(i);
+        }
+      }
+    }
 
     private lightWireHasJump(pinIndex: number) {
       // If a pin before it has a switch
-      for (let i = 0; i < NUMBER_OF_GPIO_PINS; i++) {
+      for (let i = 0; i < pinIndex; i++) {
         const value = this.getToggleValue(i, SWITCH_GROUP_CLASS_NAME);
         if (value === ToggleValue.On) {
           return true;
@@ -660,9 +670,13 @@ namespace pxsim.visuals {
     }
 
     private turnOnLight(pinIndex: number) {
+      this.addCircuitForLight(pinIndex);
+      this.setToggleValue(pinIndex, LIGHT_GROUP_CLASS_NAME, ToggleValue.On);
+    }
+
+    private addCircuitForLight(pinIndex: number) {
       const wireEl = createLightFromPinToGround(pinIndex, this.lightWireHasJump(pinIndex));
       this.part.el.append(wireEl);
-      this.setToggleValue(pinIndex, LIGHT_GROUP_CLASS_NAME, ToggleValue.On);
     }
 
     private turnOffLight(pinIndex: number) {
@@ -671,7 +685,7 @@ namespace pxsim.visuals {
         LIGHT_GROUP_CLASS_NAME,
         ToggleValue.OffAndEnabled
       );
-      this.removeLightWire(pinIndex);
+      this.removeCircuitForLight(pinIndex);
     }
 
     private enableLight(pinIndex: number) {
@@ -688,15 +702,15 @@ namespace pxsim.visuals {
         LIGHT_GROUP_CLASS_NAME,
         ToggleValue.OffAndDisabled
       );
-      this.removeLightWire(pinIndex);
+      this.removeCircuitForLight(pinIndex);
     }
 
-    private removeLightWire(i: number) {
-      const switchWireEl = this.element.querySelector(
+    private removeCircuitForLight(i: number) {
+      const lightGroupEl = this.element.querySelector(
         `#${getWireIdName(i, LIGHT_GROUP_CLASS_NAME)}`
       );
-      if (switchWireEl) {
-        switchWireEl.remove();
+      if (lightGroupEl) {
+        lightGroupEl.remove();
       }
     }
 
