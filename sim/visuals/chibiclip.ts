@@ -318,7 +318,7 @@ namespace pxsim.visuals {
     return group;
   }
 
-  function createLightFromPinToGround(i: number, hasJump = true) {
+  function createLightFromPinToGround(i: number, hasJump: boolean) {
     const group = createSvgElement("g");
     group.setAttribute("id", `${getWireIdName(i, LIGHT_GROUP_CLASS_NAME)}`);
     group.classList.add("circuit");
@@ -648,8 +648,19 @@ namespace pxsim.visuals {
       }
     }
 
+    private lightWireHasJump(pinIndex: number) {
+      // If a pin before it has a switch
+      for (let i = 0; i < NUMBER_OF_GPIO_PINS; i++) {
+        const value = this.getToggleValue(i, SWITCH_GROUP_CLASS_NAME);
+        if (value === ToggleValue.On) {
+          return true;
+        }
+      }
+      return false;
+    }
+
     private turnOnLight(pinIndex: number) {
-      const wireEl = createLightFromPinToGround(pinIndex);
+      const wireEl = createLightFromPinToGround(pinIndex, this.lightWireHasJump(pinIndex));
       this.part.el.append(wireEl);
       this.setToggleValue(pinIndex, LIGHT_GROUP_CLASS_NAME, ToggleValue.On);
     }
