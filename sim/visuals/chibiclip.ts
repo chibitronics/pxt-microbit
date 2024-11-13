@@ -255,23 +255,18 @@ namespace pxsim.visuals {
     group.setAttribute("id", `${getWireIdName(i, SWITCH_GROUP_CLASS_NAME)}`);
     group.classList.add("circuit");
 
-    const widthOffset = (RECT_WIDTH - WIRE_WIDTH) / 2;
-    const startingX = widthOffset + RECT_X_OFFSET + RECT_X_DISTANCE * i;
+    const xOffset = RECT_X_OFFSET + RECT_WIDTH / 2
+    const startingX = xOffset + RECT_X_DISTANCE * i;
     const bottomOfClipY = CLIP_HEIGHT;
 
-    const initialRect = createSvgElement("line");
-    initialRect.setAttribute("x1", `${startingX}`);
-    initialRect.setAttribute("y1", `${bottomOfClipY}`);
-    initialRect.setAttribute("x2", `${startingX}`);
-    initialRect.setAttribute(
-      "y2",
-      `${bottomOfClipY + SWITCH_OFF_INITIAL_WIRE_HEIGHT}`
-    );
-    initialRect.setAttribute("stroke", "black");
-    initialRect.setAttribute("stroke-width", `${WIRE_WIDTH}`);
-    initialRect.classList.add("wire");
-    group.append(initialRect);
+    // Draw the initial line before the gap.
+    const initialLinePath = createSvgElement("path");
+    const initialLineD = `M ${startingX} ${bottomOfClipY} V ${bottomOfClipY + SWITCH_OFF_INITIAL_WIRE_HEIGHT}`
+    initialLinePath.setAttribute("d", initialLineD);
+    initialLinePath.classList.add("new-wire");
+    group.append(initialLinePath);
 
+    // Draw the switch in the off state
     const gapButton = createSvgElement("rect");
     gapButton.setAttribute("x", `${startingX}`);
     gapButton.setAttribute(
@@ -284,37 +279,25 @@ namespace pxsim.visuals {
     gapButton.setAttribute("data-pin-index", `${i}`);
     group.append(gapButton);
 
-    const polygon = createSvgElement("polygon");
-    polygon.classList.add("wire");
+    // Draw the remaining line.
+    const remainingLinePath = createSvgElement("path");
+    const remainingY1 = bottomOfClipY + SWITCH_OFF_INITIAL_WIRE_HEIGHT + SWITCH_GAP;
+    let remainingLineD = `M ${startingX} ${remainingY1} `;
 
-    const x1 = startingX;
-    const y1 = bottomOfClipY + SWITCH_OFF_INITIAL_WIRE_HEIGHT + SWITCH_GAP;
+    // 1. Draw the downward stroke
+    remainingLineD += `V ${CLIP_HEIGHT + SWITCH_WIRE_HEIGHT} `;
 
-    const x2 = x1 + WIRE_WIDTH;
-    const y2 = y1;
+    // 2. Draw the horizontal stroke 
+    const powerPinStartingX = xOffset + RECT_X_DISTANCE * POWER_PIN_INDEX;
+    remainingLineD += `H ${powerPinStartingX} `;
 
-    const x3 = x2;
-    const y3 = y2 + (wireHeight - SWITCH_OFF_INITIAL_WIRE_HEIGHT - SWITCH_GAP);
+    // 3. Draw the remaining vertical stroke 
+    remainingLineD += `V ${bottomOfClipY} `;
 
-    const powerPinStartingX = RECT_X_OFFSET + RECT_X_DISTANCE * POWER_PIN_INDEX;
-    const x4 = powerPinStartingX + widthOffset;
-    const y4 = y3;
+    remainingLinePath.setAttribute("d", remainingLineD);
+    remainingLinePath.classList.add("new-wire");
+    group.append(remainingLinePath);
 
-    const x5 = x4;
-    const y5 = bottomOfClipY;
-
-    const x6 = x5 + WIRE_WIDTH;
-    const y6 = y5;
-
-    const x7 = x6;
-    const y7 = y3 + WIRE_WIDTH;
-
-    const x8 = x1;
-    const y8 = y7;
-
-    const points = `${x1},${y1} ${x2},${y2} ${x3},${y3} ${x4},${y4} ${x5},${y5} ${x6},${y6} ${x7},${y7} ${x8},${y8}`;
-    polygon.setAttribute("points", points);
-    group.append(polygon);
     return group;
   }
 
