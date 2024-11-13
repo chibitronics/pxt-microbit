@@ -55,7 +55,7 @@ const TOGGLE_WIDTH = RECT_WIDTH;
 
 const LED_TOGGLES_Y = SWITCH_TOGGLES_Y;
 const LIGHT_WIDTH = 36;
-// 
+//
 //   |\
 // a | \ c
 //   |__\
@@ -64,7 +64,9 @@ const LIGHT_WIDTH = 36;
 // a = Math.sqrt(c^2 - b^2)
 // c = LIGHT_WIDTH
 // b = LIGHT_WIDTH / 2
-const LIGHT_HEIGHT = Math.sqrt(Math.pow(LIGHT_WIDTH, 2) - Math.pow(LIGHT_WIDTH / 2, 2));
+const LIGHT_HEIGHT = Math.sqrt(
+  Math.pow(LIGHT_WIDTH, 2) - Math.pow(LIGHT_WIDTH / 2, 2)
+);
 const LIGHT_Y = CLIP_HEIGHT + SWITCH_OFF_INITIAL_WIRE_HEIGHT;
 
 const POWER_PIN_INDEX = TOTAL_NUMBER_OF_PINS - 2;
@@ -210,13 +212,11 @@ namespace pxsim.visuals {
     return labelText;
   }
 
-  function createLightTriangle(
-    pinIndex: number,
-    className: string,
-  ) {
+  function createLightTriangle(pinIndex: number, className: string) {
     const polygon = createSvgElement("polygon");
     polygon.classList.add(className);
-    const xCenterPoint = RECT_X_OFFSET + RECT_X_DISTANCE * pinIndex + RECT_WIDTH / 2;
+    const xCenterPoint =
+      RECT_X_OFFSET + RECT_X_DISTANCE * pinIndex + RECT_WIDTH / 2;
 
     const x1 = xCenterPoint - LIGHT_WIDTH / 2;
     const x2 = x1 + LIGHT_WIDTH;
@@ -250,7 +250,7 @@ namespace pxsim.visuals {
   function createSwitchFromPinToVoltage(i: number, wireHeight: number) {
     const group = createSvgElement("g");
     group.setAttribute("id", `${getWireIdName(i, SWITCH_GROUP_CLASS_NAME)}`);
-    group.classList.add("wire");
+    group.classList.add("circuit");
 
     const widthOffset = (RECT_WIDTH - WIRE_WIDTH) / 2;
     const startingX = widthOffset + RECT_X_OFFSET + RECT_X_DISTANCE * i;
@@ -312,7 +312,7 @@ namespace pxsim.visuals {
   function createLightFromPinToGround(i: number, wireHeight: number) {
     const group = createSvgElement("g");
     group.setAttribute("id", `${getWireIdName(i, LIGHT_GROUP_CLASS_NAME)}`);
-    group.classList.add("wire");
+    group.classList.add("circuit");
 
     const widthOffset = (RECT_WIDTH - WIRE_WIDTH) / 2;
     const startingX = widthOffset + RECT_X_OFFSET + RECT_X_DISTANCE * i;
@@ -352,12 +352,13 @@ namespace pxsim.visuals {
     group.append(polygon);
 
     const lightGroup = createSvgElement("g");
-    lightGroup.id = getLightIdName(i, LIGHT_GROUP_CLASS_NAME);
+    lightGroup.id = getLightIdName(i);
 
-    const lightGraphicBottom = createLightTriangle(i, 'triangle-base');
+    const lightGraphicBottom = createLightTriangle(i, "triangle-base");
     lightGroup.append(lightGraphicBottom);
 
-    const lightGraphicTop = createLightTriangle(i, 'triangle-light');
+    const lightGraphicTop = createLightTriangle(i, "triangle-light");
+    lightGraphicTop.setAttribute("fill", "transparent");
     lightGraphicTop.classList.add("off");
     lightGroup.append(lightGraphicTop);
 
@@ -393,8 +394,8 @@ namespace pxsim.visuals {
     return `${groupClassName}-wire-${pinIndex}`;
   }
 
-  function getLightIdName(pinIndex: number, groupClassName: string) {
-    return `${groupClassName}-light-${pinIndex}`;
+  function getLightIdName(pinIndex: number) {
+    return `${LIGHT_GROUP_CLASS_NAME}-light-${pinIndex}`;
   }
 
   function createToggle(
@@ -477,36 +478,24 @@ namespace pxsim.visuals {
               font-family: "Courier New";
             }
 
-            .wire {
+            .circuit {
               display: none;
             }
 
-            .wire .clickableGap.off {
+            .circuit .clickableGap.off {
               fill: transparent;
             }
 
-            .wire .clickableGap.on,
-            .wire rect, .wire polygon {
+            .circuit .clickableGap.on,
+            .circuit rect, .circuit polygon {
               fill: Silver;
             }
             
-            .wire polygon.triangle-base {
+            .circuit polygon.triangle-base {
               fill: gray;
             }
             
-            .wire polygon.triangle-light {
-              fill: white;
-              stroke: rgb(235, 235, 235);
-              stroke-width: 3;
-              stroke-miterlimit: 10;
-              filter: url("#ledGlow");
-            }
-            
-            .wire polygon.triangle-light.off {
-              display: none;
-            }
-
-            .wire.chibi-visible {
+            .circuit.chibi-visible {
               display: block;
             }
         `;
@@ -540,7 +529,7 @@ namespace pxsim.visuals {
 
       // Add switch event listeners
       const clickableGaps = this.element.querySelectorAll(
-        ".wire .clickableGap"
+        ".circuit .clickableGap"
       );
       for (const gap of clickableGaps) {
         gap.addEventListener("click", () => {
@@ -741,19 +730,17 @@ namespace pxsim.visuals {
         case ToggleValue.On:
           toggleGroup.classList.add("on");
           toggleGroup.classList.remove("disabled", "off");
-          wireEl.classList.add("chibi-visible");
+          wireEl?.classList.add("chibi-visible");
           break;
         case ToggleValue.OffAndEnabled:
           toggleGroup.classList.add("off");
           toggleGroup.classList.remove("disabled", "on");
-          wireEl.classList.remove("chibi-visible");
+          wireEl?.classList.remove("chibi-visible");
           break;
         case ToggleValue.OffAndDisabled:
           toggleGroup.classList.add("disabled");
           toggleGroup.classList.remove("off", "on");
-          if (wireEl) {
-            wireEl.classList.remove("chibi-visible");
-          }
+          wireEl?.classList.remove("chibi-visible");
       }
     }
 
@@ -812,19 +799,20 @@ namespace pxsim.visuals {
       const pinLedFillEl = this.element.querySelector(
         `#pin${index} circle.level`
       );
+      const lightEl = this.element.querySelector(`#${getLightIdName(index)} .triangle-light`);
 
       if (isOn) {
         pinFillEl.setAttribute("fill", `hsl(112.5, 100%, 67%)`); //chibineongreen
-        pinLedFillEl.setAttribute("fill", "rgb(255, 255, 255)");
-        pinLedFillEl.setAttribute("stroke", "rgb(235, 235, 235)");
-        pinLedFillEl.setAttribute("stroke-width", "3");
-        pinLedFillEl.setAttribute("stroke-miterlimit", "10");
-        pinLedFillEl.setAttribute("filter", 'url("#ledGlow")'); //chibiglow
+        this.setLedOn(pinLedFillEl, 100);
+        if (lightEl) {
+          this.setLedOn(lightEl, 100);
+        }
       } else {
         pinFillEl.setAttribute("fill", "transparent");
-        pinLedFillEl.setAttribute("fill", "transparent");
-        pinLedFillEl.removeAttribute("filter");
-        pinLedFillEl.removeAttribute("stroke");
+        this.setLedOff(pinLedFillEl);
+        if (lightEl) {
+          this.setLedOff(lightEl);
+        }
       }
     }
 
@@ -837,6 +825,7 @@ namespace pxsim.visuals {
       const pinLedFillEl = this.element.querySelector(
         `#pin${index} circle.level`
       );
+      const lightEl = this.element.querySelector(`#${getLightIdName(index)} .triangle-light`);
 
       const fillHeight = RECT_HEIGHT * percentFraction;
       pinFillEl.setAttribute("fill", "hsl(112.5, 100%, 67%)"); //chibineongreen
@@ -844,11 +833,24 @@ namespace pxsim.visuals {
       pinFillEl.setAttribute("y", `${RECT_Y + (RECT_HEIGHT - fillHeight)}`);
 
       const alpha = percentFraction;
-      pinLedFillEl.setAttribute("fill", `rgba(255, 255, 255, ${alpha})`);
-      pinLedFillEl.setAttribute("stroke", `rgb(235, 235, 235, ${alpha})`);
-      pinLedFillEl.setAttribute("stroke-width", "3");
-      pinLedFillEl.setAttribute("stroke-miterlimit", "10");
-      pinLedFillEl.setAttribute("filter", 'url("#ledGlow")'); //chibiglow
+      this.setLedOn(pinLedFillEl, alpha);
+      if (lightEl) {
+        this.setLedOn(lightEl, alpha);
+      }
+    }
+
+    private setLedOn(element: Element, alpha: number) {
+      element.setAttribute("fill", `rgba(255, 255, 255, ${alpha})`);
+      element.setAttribute("stroke", `rgb(235, 235, 235, ${alpha})`);
+      element.setAttribute("stroke-width", "3");
+      element.setAttribute("stroke-miterlimit", "10");
+      element.setAttribute("filter", 'url("#ledGlow")'); //chibiglow
+    }
+
+    private setLedOff(element: Element) {
+      element.setAttribute("fill", "transparent");
+      element.removeAttribute("filter");
+      element.removeAttribute("stroke");
     }
 
     public updateTheme(): void {}
