@@ -33,7 +33,7 @@ const CIRCLE_Y =
 const CIRCLE_X_OFFSET = X_OFFSET + CIRCLE_RADIUS;
 const CIRCLE_X_DISTANCE = SPACING;
 
-const TEXT_Y = 140;
+const TEXT_Y = RECT_Y + RECT_Y / 2;
 const TEXT_X_OFFSET = X_OFFSET;
 const TEXT_X_DISTANCE = SPACING;
 
@@ -47,12 +47,15 @@ const GAP_ON_COLOR = WIRE_COLOR;
 
 const SWITCH_TOGGLES_Y = CLIP_HEIGHT + WIRE_DISTANCE + WIRE_WIDTH + 40;
 const SWITCH_TOGGLES_GAP = 20;
-const SWITCH_TOGGLE_HEIGHT = RECT_HEIGHT;
+const SWITCH_TOGGLE_HEIGHT = RECT_WIDTH;
 const SWITCH_TOGGLE_WIDTH = RECT_WIDTH;
 const SWITCH_OFF_COLOR = "gainsboro";
 const SWITCH_ON_COLOR = "green";
 
-const LED_TOGGLES_Y = SWITCH_TOGGLES_Y
+const LED_TOGGLES_Y = SWITCH_TOGGLES_Y;
+
+const POWER_PIN_INDEX = TOTAL_NUMBER_OF_PINS - 2;
+const GROUND_PIN_INDEX = TOTAL_NUMBER_OF_PINS - 1;
 
 namespace pxsim.visuals {
   function createSvgElement(tagName: string) {
@@ -120,22 +123,19 @@ namespace pxsim.visuals {
       const levelRect = createPinRectangle(i, "level", "transparent");
       pinGroup.append(levelRect);
 
-      const labelText = createSvgElement("text");
-      labelText.classList.add("label");
-      labelText.setAttribute("x", `${TEXT_X_OFFSET + TEXT_X_DISTANCE * i}`);
-      labelText.setAttribute("y", `${TEXT_Y}`);
-      labelText.setAttribute("textAnchor", "middle");
-      // labelText.innerHTML = 'OFF';
-      pinGroup.append(labelText);
+      const label = createPinLabel(i, `${i}`);
+      pinGroup.append(label);
     }
 
-    // Add voltage pin
+    // Add power & ground pins
     const powerPin = createPinRectangle(
-      TOTAL_NUMBER_OF_PINS - 2,
+      POWER_PIN_INDEX,
       "power",
       RECT_DEFAULT_FILL
     );
     group.append(powerPin);
+    const powerLabel = createPinLabel(POWER_PIN_INDEX, "+");
+    group.append(powerLabel);
 
     const groundPin = createPinRectangle(
       TOTAL_NUMBER_OF_PINS - 1,
@@ -143,6 +143,8 @@ namespace pxsim.visuals {
       RECT_DEFAULT_FILL
     );
     group.append(groundPin);
+    const groundLabel = createPinLabel(GROUND_PIN_INDEX, "-");
+    group.append(groundLabel);
 
     // Add switches (starts invisible)
     for (let i = 0; i < NUMBER_OF_GPIO_PINS; i++) {
@@ -169,6 +171,16 @@ namespace pxsim.visuals {
     pinRect.setAttribute("width", `${RECT_WIDTH}`);
     pinRect.setAttribute("fill", fillColor);
     return pinRect;
+  }
+
+  function createPinLabel(pinIndex: number, text: string) {
+    const labelText = createSvgElement("text");
+    labelText.classList.add("pin-label");
+    labelText.setAttribute("x", `${TEXT_X_OFFSET + TEXT_X_DISTANCE * pinIndex + RECT_WIDTH / 2 - 5}`);
+    labelText.setAttribute("y", `${TEXT_Y}`);
+    labelText.setAttribute("textAnchor", "middle");
+    labelText.innerHTML = text;
+    return labelText;
   }
 
   function createLightCircle(
@@ -289,7 +301,7 @@ namespace pxsim.visuals {
     );
     labelText.setAttribute(
       "y",
-      `${SWITCH_TOGGLES_Y + SWITCH_TOGGLES_GAP + RECT_HEIGHT / 2 + 4}`
+      `${SWITCH_TOGGLES_Y + SWITCH_TOGGLES_GAP + SWITCH_TOGGLE_HEIGHT / 2 + 4}`
     );
     labelText.setAttribute("textAnchor", "middle");
     labelText.innerHTML = `${pinIndex}`;
@@ -312,7 +324,13 @@ namespace pxsim.visuals {
   }
   export class ChibiClipView implements IBoardPart<EdgeConnectorState> {
     public style: string = `
-            .sim-chibichip {
+            svg text {
+              font-family: "Arial";
+              font-weight: bold;
+            }
+
+            svg text.pin-label {
+              font-family: "Courier New";
             }
 
             .wire {
@@ -374,7 +392,7 @@ namespace pxsim.visuals {
       );
       for (const toggle of switchToggles) {
         toggle.addEventListener("click", () => {
-          console.log('clicked toggle');
+          console.log("clicked toggle");
           const toggleBody = toggle.querySelector(`.toggle`);
           const pinIndex = parseInt(toggleBody.getAttribute("data-pin-index"));
           const pin = this.state.pins[pinIndex];
@@ -404,7 +422,6 @@ namespace pxsim.visuals {
       );
       if (isClicked) {
         gap.setAttribute("fill", GAP_ON_COLOR);
-        
       } else {
         gap.setAttribute("fill", GAP_OFF_COLOR);
       }
@@ -469,15 +486,12 @@ namespace pxsim.visuals {
       const pinLedFillEl = this.element.querySelector(
         `#pin${index} circle.level`
       );
-      const pinLabelEl = this.element.querySelector(`#pin${index} text.label`);
-
       pinLedFillEl.setAttribute("fill", "transparent");
       pinFillEl.setAttribute("height", `${RECT_HEIGHT}`);
       pinFillEl.setAttribute("y", `${RECT_Y}`);
       pinFillEl.setAttribute("fill", "transparent");
       pinFillEl.removeAttribute("stroke");
       pinFillEl.removeAttribute("filter");
-      pinLabelEl.innerHTML = "";
     }
 
     private setDigitalDisplay(index: number) {
@@ -509,20 +523,17 @@ namespace pxsim.visuals {
       const pin = this.state.pins[index];
       U.assert((pin.mode & PinFlags.Analog) !== 0);
       const percentFraction = pin.value / ANALOG_PIN_MAX_VALUE;
-      const percentageValue = Math.round(percentFraction * 100);
 
       const pinFillEl = this.element.querySelector(`#pin${index} rect.level`);
       const pinLedFillEl = this.element.querySelector(
         `#pin${index} circle.level`
       );
-      const pinLabelEl = this.element.querySelector(`#pin${index} text.label`);
 
       const fillHeight = RECT_HEIGHT * percentFraction;
       pinFillEl.setAttribute("fill", "hsl(112.5, 100%, 67%)"); //chibineongreen
       pinFillEl.setAttribute("height", `${fillHeight}`);
       pinFillEl.setAttribute("y", `${RECT_Y + (RECT_HEIGHT - fillHeight)}`);
 
-      pinLabelEl.innerHTML = `${percentageValue}%`;
       const alpha = percentFraction;
       pinLedFillEl.setAttribute("fill", `rgba(255, 255, 255, ${alpha})`);
       pinLedFillEl.setAttribute("stroke", `rgb(235, 235, 235, ${alpha})`);
