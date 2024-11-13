@@ -38,19 +38,21 @@ const TEXT_X_OFFSET = X_OFFSET;
 const TEXT_X_DISTANCE = SPACING;
 
 const WIRE_WIDTH = 20;
-const WIRE_DISTANCE = 150;
-const SWITCH_DISTANCE = 60;
+const WIRE_DISTANCE = 120;
+const SWITCH_DISTANCE = 50;
 const SWITCH_GAP = 40;
 const WIRE_COLOR = "gray";
 const GAP_OFF_COLOR = "transparent";
 const GAP_ON_COLOR = WIRE_COLOR;
 
-const SWITCH_TOGGLES_Y = CLIP_HEIGHT + WIRE_DISTANCE + WIRE_WIDTH + 50;
+const SWITCH_TOGGLES_Y = CLIP_HEIGHT + WIRE_DISTANCE + WIRE_WIDTH + 40;
 const SWITCH_TOGGLES_GAP = 20;
 const SWITCH_TOGGLE_HEIGHT = RECT_HEIGHT;
 const SWITCH_TOGGLE_WIDTH = RECT_WIDTH;
 const SWITCH_OFF_COLOR = "gainsboro";
 const SWITCH_ON_COLOR = "green";
+
+const LED_TOGGLES_Y = SWITCH_TOGGLES_Y
 
 namespace pxsim.visuals {
   function createSvgElement(tagName: string) {
