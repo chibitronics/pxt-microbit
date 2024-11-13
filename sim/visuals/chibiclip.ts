@@ -46,11 +46,13 @@ const GAP_OFF_COLOR = "transparent";
 const GAP_ON_COLOR = WIRE_COLOR;
 
 const SWITCH_TOGGLES_Y = CLIP_HEIGHT + WIRE_DISTANCE + WIRE_WIDTH + 100;
-const SWITCH_TOGGLES_GAP = 20;
-const SWITCH_TOGGLE_HEIGHT = RECT_WIDTH;
-const SWITCH_TOGGLE_WIDTH = RECT_WIDTH;
-const SWITCH_OFF_COLOR = "gainsboro";
-const SWITCH_ON_COLOR = "MediumAquamarine";
+const SWITCH_GROUP_CLASS_NAME = "all-toggles";
+
+const TOGGLES_GAP = 20;
+const TOGGLE_HEIGHT = RECT_WIDTH;
+const TOGGLE_WIDTH = RECT_WIDTH;
+const TOGGLE_OFF_COLOR = "gainsboro";
+const TOGGLE_ON_COLOR = "MediumAquamarine";
 
 const LED_TOGGLES_Y = SWITCH_TOGGLES_Y;
 
@@ -153,7 +155,7 @@ namespace pxsim.visuals {
     }
 
     // Add toggles add/remove switches
-    group.append(addSwitchToggles());
+    group.append(addSwitchToggles(SWITCH_TOGGLES_Y, SWITCH_GROUP_CLASS_NAME, "Add Switch"));
 
     return root.firstElementChild as SVGAElement;
   }
@@ -262,46 +264,46 @@ namespace pxsim.visuals {
     return group;
   }
 
-  function addSwitchToggles() {
+  function addSwitchToggles(yOffset: number, groupClassName: string, label: string) {
     const group = createSvgElement("g");
-    group.classList.add("all-toggles");
+    group.classList.add(groupClassName);
 
     const labelText = createSvgElement("text");
     labelText.setAttribute("x", "0");
-    labelText.setAttribute("y", `${SWITCH_TOGGLES_Y}`);
+    labelText.setAttribute("y", `${yOffset}`);
     labelText.setAttribute("textAnchor", "left");
-    labelText.innerHTML = "Add Switch";
+    labelText.innerHTML = label;
     group.append(labelText);
 
     for (let i = 0; i < NUMBER_OF_GPIO_PINS; i++) {
-      const toggle = createSwitchToggle(i);
+      const toggle = createSwitchToggle(i, yOffset);
       group.append(toggle);
     }
 
     return group;
   }
 
-  function createSwitchToggle(pinIndex: number) {
+  function createSwitchToggle(pinIndex: number, overallYOffset: number) {
     const group = createSvgElement("g");
     group.id = `switch-toggle${pinIndex}`;
     group.classList.add("toggle-group");
     const pinRect = createSvgElement("rect");
     pinRect.classList.add("toggle");
     pinRect.setAttribute("data-pin-index", `${pinIndex}`);
-    pinRect.setAttribute("x", `${RECT_X_DISTANCE * pinIndex}`);
-    pinRect.setAttribute("y", `${SWITCH_TOGGLES_Y + SWITCH_TOGGLES_GAP}`);
-    pinRect.setAttribute("height", `${SWITCH_TOGGLE_HEIGHT}`);
-    pinRect.setAttribute("width", `${SWITCH_TOGGLE_WIDTH}`);
-    pinRect.setAttribute("fill", SWITCH_OFF_COLOR);
+    pinRect.setAttribute("x", `${(TOGGLE_WIDTH + TOGGLES_GAP) * pinIndex}`);
+    pinRect.setAttribute("y", `${overallYOffset + TOGGLES_GAP}`);
+    pinRect.setAttribute("height", `${TOGGLE_HEIGHT}`);
+    pinRect.setAttribute("width", `${TOGGLE_WIDTH}`);
+    pinRect.setAttribute("fill", TOGGLE_OFF_COLOR);
 
     const labelText = createSvgElement("text");
     labelText.setAttribute(
       "x",
-      `${RECT_X_DISTANCE * pinIndex + SWITCH_TOGGLE_WIDTH / 2 - 3}`
+      `${RECT_X_DISTANCE * pinIndex + TOGGLE_WIDTH / 2 - 3}`
     );
     labelText.setAttribute(
       "y",
-      `${SWITCH_TOGGLES_Y + SWITCH_TOGGLES_GAP + SWITCH_TOGGLE_HEIGHT / 2 + 4}`
+      `${SWITCH_TOGGLES_Y + TOGGLES_GAP + TOGGLE_HEIGHT / 2 + 4}`
     );
     labelText.setAttribute("textAnchor", "middle");
     labelText.innerHTML = `${pinIndex}`;
@@ -397,7 +399,7 @@ namespace pxsim.visuals {
       }
 
       const switchToggles = this.element.querySelectorAll(
-        ".all-toggles .toggle-group"
+        `.${SWITCH_GROUP_CLASS_NAME} .toggle-group`
       );
       for (const toggle of switchToggles) {
         toggle.addEventListener("click", () => {
@@ -440,7 +442,7 @@ namespace pxsim.visuals {
       const toggleBody = this.element.querySelector(
         `#switch-toggle${pinIndex} .toggle`
       );
-      return toggleBody.getAttribute("fill") === SWITCH_ON_COLOR;
+      return toggleBody.getAttribute("fill") === TOGGLE_ON_COLOR;
     }
 
     private setSwitchLineShowing(pinIndex: number, isShowing: boolean) {
@@ -449,10 +451,10 @@ namespace pxsim.visuals {
       );
       const switchWireEl = this.element.querySelector(`#switch${pinIndex}`);
       if (isShowing) {
-        toggleBody.setAttribute("fill", SWITCH_ON_COLOR);
+        toggleBody.setAttribute("fill", TOGGLE_ON_COLOR);
         switchWireEl.classList.add("chibi-visible");
       } else {
-        toggleBody.setAttribute("fill", SWITCH_OFF_COLOR);
+        toggleBody.setAttribute("fill", TOGGLE_OFF_COLOR);
         switchWireEl.classList.remove("chibi-visible");
       }
     }
