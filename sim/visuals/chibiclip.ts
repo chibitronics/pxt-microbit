@@ -55,6 +55,9 @@ const TOGGLE_WIDTH = RECT_WIDTH;
 
 const LED_TOGGLES_Y = SWITCH_TOGGLES_Y;
 const LIGHT_WIDTH = 36;
+
+const LIGHT_JUMP_HEIGHT = 40;
+const BEZIER_CURVE_HEIGHT = 25;
 //
 //   |\
 // a | \ c
@@ -256,11 +259,16 @@ namespace pxsim.visuals {
     const startingX = widthOffset + RECT_X_OFFSET + RECT_X_DISTANCE * i;
     const bottomOfClipY = CLIP_HEIGHT;
 
-    const initialRect = createSvgElement("rect");
-    initialRect.setAttribute("x", `${startingX}`);
-    initialRect.setAttribute("y", `${bottomOfClipY}`);
-    initialRect.setAttribute("height", `${SWITCH_OFF_INITIAL_WIRE_HEIGHT}`);
-    initialRect.setAttribute("width", `${WIRE_WIDTH}`);
+    const initialRect = createSvgElement("line");
+    initialRect.setAttribute("x1", `${startingX}`);
+    initialRect.setAttribute("y1", `${bottomOfClipY}`);
+    initialRect.setAttribute("x2", `${startingX}`);
+    initialRect.setAttribute(
+      "y2",
+      `${bottomOfClipY + SWITCH_OFF_INITIAL_WIRE_HEIGHT}`
+    );
+    initialRect.setAttribute("stroke", "black");
+    initialRect.setAttribute("stroke-width", `${WIRE_WIDTH}`);
     initialRect.classList.add("wire");
     group.append(initialRect);
 
@@ -310,48 +318,39 @@ namespace pxsim.visuals {
     return group;
   }
 
-  function createLightFromPinToGround(i: number, wireHeight: number) {
+  function createLightFromPinToGround(i: number, hasJump = true) {
     const group = createSvgElement("g");
     group.setAttribute("id", `${getWireIdName(i, LIGHT_GROUP_CLASS_NAME)}`);
     group.classList.add("circuit");
 
-    const widthOffset = (RECT_WIDTH - WIRE_WIDTH) / 2;
-    const startingX = widthOffset + RECT_X_OFFSET + RECT_X_DISTANCE * i;
+    const startingX = RECT_X_OFFSET + RECT_X_DISTANCE * i + RECT_WIDTH / 2;
     const bottomOfClipY = RECT_Y + RECT_HEIGHT;
-
-    const polygon = createSvgElement("polygon");
-    polygon.classList.add("wire")
+    const path = createSvgElement("path");
+    path.classList.add("new-wire");
 
     const x1 = startingX;
-    // const y1 = bottomOfClipY + wireHeight + SWITCH_GAP;
     const y1 = bottomOfClipY;
+    const lengthOfWire = RECT_X_DISTANCE * GROUND_PIN_INDEX;
+    const endWireX = RECT_X_OFFSET + RECT_WIDTH / 2 + lengthOfWire;
 
-    const x2 = x1 + WIRE_WIDTH;
-    const y2 = y1;
+    let d = "";
+    if (hasJump) {
+      const jumpStartLength = SWITCH_WIRE_HEIGHT - LIGHT_JUMP_HEIGHT / 2;
+      const jumpStartY = y1 + jumpStartLength;
+      const jumpEndLength = SWITCH_WIRE_HEIGHT + LIGHT_JUMP_HEIGHT / 2;
+      const jumpEndY = y1 + jumpEndLength;
+      const bezierX = `${BEZIER_CURVE_HEIGHT + x1}`;
+      const bezierEndX = RECT_X_OFFSET + RECT_X_DISTANCE * i;
+      const bezier = `C ${bezierX} ${jumpStartY} ${bezierX} ${jumpEndY} ${x1} ${jumpEndY}`
 
-    const x3 = x2;
-    const y3 = y2 + wireHeight;
+      const lineEndY = y1 + LIGHT_WIRE_HEIGHT;
+      d = `M ${x1} ${y1} V ${jumpStartY} ${bezier} V ${lineEndY} H ${endWireX} V ${y1}`;
+    } else {
+      d = `M ${x1} ${y1} V ${y1 + LIGHT_WIRE_HEIGHT} H ${endWireX} V ${y1}`;
+    }
 
-    const powerPinStartingX =
-      RECT_X_OFFSET + RECT_X_DISTANCE * GROUND_PIN_INDEX;
-    const x4 = powerPinStartingX + widthOffset;
-    const y4 = y3;
-
-    const x5 = x4;
-    const y5 = bottomOfClipY;
-
-    const x6 = x5 + WIRE_WIDTH;
-    const y6 = y5;
-
-    const x7 = x6;
-    const y7 = y3 + WIRE_WIDTH;
-
-    const x8 = x1;
-    const y8 = y7;
-
-    const points = `${x1},${y1} ${x2},${y2} ${x3},${y3} ${x4},${y4} ${x5},${y5} ${x6},${y6} ${x7},${y7} ${x8},${y8}`;
-    polygon.setAttribute("points", points);
-    group.append(polygon);
+    path.setAttribute("d", d);
+    group.append(path);
 
     const lightGroup = createSvgElement("g");
     lightGroup.id = getLightIdName(i);
@@ -500,6 +499,12 @@ namespace pxsim.visuals {
             .circuit.chibi-visible {
               display: block;
             }
+
+            .new-wire {
+              stroke: Silver;
+              stroke-width: 12px;
+              fill: none;
+            }
         `;
     public element: SVGElement;
     public overElement: SVGElement;
@@ -644,7 +649,7 @@ namespace pxsim.visuals {
     }
 
     private turnOnLight(pinIndex: number) {
-      const wireEl = createLightFromPinToGround(pinIndex, LIGHT_WIRE_HEIGHT);
+      const wireEl = createLightFromPinToGround(pinIndex);
       this.part.el.append(wireEl);
       this.setToggleValue(pinIndex, LIGHT_GROUP_CLASS_NAME, ToggleValue.On);
     }
@@ -801,7 +806,9 @@ namespace pxsim.visuals {
       const pinLedFillEl = this.element.querySelector(
         `#pin${index} circle.level`
       );
-      const lightEl = this.element.querySelector(`#${getLightIdName(index)} .triangle-light`);
+      const lightEl = this.element.querySelector(
+        `#${getLightIdName(index)} .triangle-light`
+      );
 
       if (isOn) {
         pinFillEl.setAttribute("fill", `hsl(112.5, 100%, 67%)`); //chibineongreen
@@ -827,7 +834,9 @@ namespace pxsim.visuals {
       const pinLedFillEl = this.element.querySelector(
         `#pin${index} circle.level`
       );
-      const lightEl = this.element.querySelector(`#${getLightIdName(index)} .triangle-light`);
+      const lightEl = this.element.querySelector(
+        `#${getLightIdName(index)} .triangle-light`
+      );
 
       const fillHeight = RECT_HEIGHT * percentFraction;
       pinFillEl.setAttribute("fill", "hsl(112.5, 100%, 67%)"); //chibineongreen
