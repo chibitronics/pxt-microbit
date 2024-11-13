@@ -39,9 +39,6 @@ const TEXT_X_DISTANCE = SPACING;
 
 const WIRE_WIDTH = 10;
 const SWITCH_GAP = 30;
-const WIRE_COLOR = "gray";
-const GAP_OFF_COLOR = "transparent";
-const GAP_ON_COLOR = WIRE_COLOR;
 
 const SWITCH_WIRE_HEIGHT = 90;
 const SWITCH_TOGGLES_Y = CLIP_HEIGHT + SWITCH_WIRE_HEIGHT + WIRE_WIDTH + 100;
@@ -228,16 +225,18 @@ namespace pxsim.visuals {
     initialRect.setAttribute("y", `${bottomOfClipY}`);
     initialRect.setAttribute("height", `${SWITCH_OFF_INITIAL_WIRE_HEIGHT}`);
     initialRect.setAttribute("width", `${WIRE_WIDTH}`);
-    initialRect.setAttribute("fill", "gray");
     group.append(initialRect);
 
     const gapButton = createSvgElement("rect");
     gapButton.setAttribute("x", `${startingX}`);
-    gapButton.setAttribute("y", `${bottomOfClipY + SWITCH_OFF_INITIAL_WIRE_HEIGHT}`);
+    gapButton.setAttribute(
+      "y",
+      `${bottomOfClipY + SWITCH_OFF_INITIAL_WIRE_HEIGHT}`
+    );
     gapButton.setAttribute("height", `${SWITCH_GAP}`);
     gapButton.setAttribute("width", `${WIRE_WIDTH}`);
-    gapButton.setAttribute("fill", GAP_OFF_COLOR);
     gapButton.classList.add("clickableGap");
+    gapButton.classList.add("off");
     gapButton.setAttribute("data-pin-index", `${i}`);
     group.append(gapButton);
 
@@ -270,16 +269,8 @@ namespace pxsim.visuals {
 
     const points = `${x1},${y1} ${x2},${y2} ${x3},${y3} ${x4},${y4} ${x5},${y5} ${x6},${y6} ${x7},${y7} ${x8},${y8}`;
     polygon.setAttribute("points", points);
-    polygon.setAttribute("fill", WIRE_COLOR);
     group.append(polygon);
     return group;
-  }
-
-  function removeLightWire(i: number) {
-    const switchWireEl = this.element.querySelector(
-      `#${getWireIdName(i, LIGHT_GROUP_CLASS_NAME)}`
-    );
-    switchWireEl.remove();
   }
 
   function createLightFromPinToGround(i: number, wireHeight: number) {
@@ -303,7 +294,8 @@ namespace pxsim.visuals {
     const x3 = x2;
     const y3 = y2 + wireHeight;
 
-    const powerPinStartingX = RECT_X_OFFSET + RECT_X_DISTANCE * GROUND_PIN_INDEX;
+    const powerPinStartingX =
+      RECT_X_OFFSET + RECT_X_DISTANCE * GROUND_PIN_INDEX;
     const x4 = powerPinStartingX + widthOffset;
     const y4 = y3;
 
@@ -321,7 +313,6 @@ namespace pxsim.visuals {
 
     const points = `${x1},${y1} ${x2},${y2} ${x3},${y3} ${x4},${y4} ${x5},${y5} ${x6},${y6} ${x7},${y7} ${x8},${y8}`;
     polygon.setAttribute("points", points);
-    polygon.setAttribute("fill", WIRE_COLOR);
     group.append(polygon);
     return group;
   }
@@ -403,6 +394,7 @@ namespace pxsim.visuals {
             svg text {
               font-family: "Arial";
               font-weight: bold;
+              user-select: none;
             }
 
             .clickableGap,
@@ -420,6 +412,18 @@ namespace pxsim.visuals {
 
             .wire {
               display: none;
+            }
+
+            .wire .clickableGap.off {
+              fill: transparent;
+              stroke: none;
+            }
+
+            .wire .clickableGap.on,
+            .wire rect, .wire polygon {
+              fill: gainsboro;
+              stroke: gray;
+              stroke-width: 1px;
             }
 
             .wire.chibi-visible {
@@ -503,10 +507,13 @@ namespace pxsim.visuals {
           const toggleBody = toggle.querySelector(`.toggle`);
           const pinIndex = parseInt(toggleBody.getAttribute("data-pin-index"));
           if (this.isToggleOn(pinIndex, LIGHT_GROUP_CLASS_NAME)) {
-            removeLightWire(pinIndex);
             this.setToggleValue(pinIndex, LIGHT_GROUP_CLASS_NAME, false);
+            this.removeLightWire(pinIndex);
           } else {
-            const wireEl = createLightFromPinToGround(pinIndex, LIGHT_WIRE_HEIGHT);
+            const wireEl = createLightFromPinToGround(
+              pinIndex,
+              LIGHT_WIRE_HEIGHT
+            );
             this.part.el.append(wireEl);
             this.setToggleValue(pinIndex, LIGHT_GROUP_CLASS_NAME, true);
           }
@@ -514,11 +521,18 @@ namespace pxsim.visuals {
       }
     }
 
+    private removeLightWire(i: number) {
+      const switchWireEl = this.element.querySelector(
+        `#${getWireIdName(i, LIGHT_GROUP_CLASS_NAME)}`
+      );
+      switchWireEl.remove();
+    }
+
     private isGapClicked(pinIndex: number) {
       const gap = this.element.querySelector(
         `#${getWireIdName(pinIndex, SWITCH_GROUP_CLASS_NAME)} .clickableGap`
       );
-      return gap.getAttribute("fill") === GAP_ON_COLOR;
+      return gap.classList.contains("on");
     }
 
     private setGapClicked(pinIndex: number, isClicked: boolean) {
@@ -526,9 +540,11 @@ namespace pxsim.visuals {
         `#${getWireIdName(pinIndex, SWITCH_GROUP_CLASS_NAME)} .clickableGap`
       );
       if (isClicked) {
-        gap.setAttribute("fill", GAP_ON_COLOR);
+        gap.classList.remove("off");
+        gap.classList.add("on");
       } else {
-        gap.setAttribute("fill", GAP_OFF_COLOR);
+        gap.classList.add("off");
+        gap.classList.remove("on");
       }
     }
 
