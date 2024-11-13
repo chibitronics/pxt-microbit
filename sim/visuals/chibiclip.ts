@@ -37,7 +37,7 @@ const TEXT_Y = RECT_Y + RECT_Y / 2;
 const TEXT_X_OFFSET = X_OFFSET;
 const TEXT_X_DISTANCE = SPACING;
 
-const WIRE_WIDTH = 10;
+const WIRE_WIDTH = 12;
 const SWITCH_GAP = 30;
 
 const SWITCH_WIRE_HEIGHT = 90;
@@ -47,7 +47,7 @@ const SWITCH_OFF_INITIAL_WIRE_HEIGHT = 30;
 
 const LIGHT_TOGGLES_Y = SWITCH_TOGGLES_Y + 100;
 const LIGHT_GROUP_CLASS_NAME = "all-light-toggles";
-const LIGHT_WIRE_HEIGHT = 120;
+const LIGHT_WIRE_HEIGHT = 140;
 
 const TOGGLES_GAP = 20;
 const TOGGLE_HEIGHT = RECT_WIDTH;
@@ -416,14 +416,11 @@ namespace pxsim.visuals {
 
             .wire .clickableGap.off {
               fill: transparent;
-              stroke: none;
             }
 
             .wire .clickableGap.on,
             .wire rect, .wire polygon {
               fill: gainsboro;
-              stroke: gray;
-              stroke-width: 1px;
             }
 
             .wire.chibi-visible {
