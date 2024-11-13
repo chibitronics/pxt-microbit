@@ -38,18 +38,19 @@ const TEXT_X_OFFSET = X_OFFSET;
 const TEXT_X_DISTANCE = SPACING;
 
 const WIRE_WIDTH = 10;
-const WIRE_DISTANCE = 90;
-const SWITCH_DISTANCE = 30;
 const SWITCH_GAP = 30;
 const WIRE_COLOR = "gray";
 const GAP_OFF_COLOR = "transparent";
 const GAP_ON_COLOR = WIRE_COLOR;
 
-const SWITCH_TOGGLES_Y = CLIP_HEIGHT + WIRE_DISTANCE + WIRE_WIDTH + 100;
+const SWITCH_WIRE_HEIGHT = 90;
+const SWITCH_TOGGLES_Y = CLIP_HEIGHT + SWITCH_WIRE_HEIGHT + WIRE_WIDTH + 100;
 const SWITCH_GROUP_CLASS_NAME = "all-switch-toggles";
+const SWITCH_OFF_INITIAL_WIRE_HEIGHT = 30;
 
 const LIGHT_TOGGLES_Y = SWITCH_TOGGLES_Y + 100;
 const LIGHT_GROUP_CLASS_NAME = "all-light-toggles";
+const LIGHT_WIRE_HEIGHT = 120;
 
 const TOGGLES_GAP = 20;
 const TOGGLE_HEIGHT = RECT_WIDTH;
@@ -153,7 +154,7 @@ namespace pxsim.visuals {
 
     // Add switches (starts invisible)
     for (let i = 0; i < NUMBER_OF_GPIO_PINS; i++) {
-      const switchLine = createSwitchFromPinToGround(i);
+      const switchLine = createSwitchFromPinToVoltage(i, SWITCH_WIRE_HEIGHT);
       group.append(switchLine);
     }
 
@@ -213,7 +214,7 @@ namespace pxsim.visuals {
     return levelCircle;
   }
 
-  function createSwitchFromPinToGround(i: number) {
+  function createSwitchFromPinToVoltage(i: number, wireHeight: number) {
     const group = createSvgElement("g");
     group.setAttribute("id", `${getWireIdName(i, SWITCH_GROUP_CLASS_NAME)}`);
     group.classList.add("wire");
@@ -225,14 +226,14 @@ namespace pxsim.visuals {
     const initialRect = createSvgElement("rect");
     initialRect.setAttribute("x", `${startingX}`);
     initialRect.setAttribute("y", `${bottomOfClipY}`);
-    initialRect.setAttribute("height", `${SWITCH_DISTANCE}`);
+    initialRect.setAttribute("height", `${SWITCH_OFF_INITIAL_WIRE_HEIGHT}`);
     initialRect.setAttribute("width", `${WIRE_WIDTH}`);
     initialRect.setAttribute("fill", "gray");
     group.append(initialRect);
 
     const gapButton = createSvgElement("rect");
     gapButton.setAttribute("x", `${startingX}`);
-    gapButton.setAttribute("y", `${bottomOfClipY + SWITCH_DISTANCE}`);
+    gapButton.setAttribute("y", `${bottomOfClipY + SWITCH_OFF_INITIAL_WIRE_HEIGHT}`);
     gapButton.setAttribute("height", `${SWITCH_GAP}`);
     gapButton.setAttribute("width", `${WIRE_WIDTH}`);
     gapButton.setAttribute("fill", GAP_OFF_COLOR);
@@ -243,15 +244,66 @@ namespace pxsim.visuals {
     const polygon = createSvgElement("polygon");
 
     const x1 = startingX;
-    const y1 = bottomOfClipY + SWITCH_DISTANCE + SWITCH_GAP;
+    const y1 = bottomOfClipY + SWITCH_OFF_INITIAL_WIRE_HEIGHT + SWITCH_GAP;
 
     const x2 = x1 + WIRE_WIDTH;
     const y2 = y1;
 
     const x3 = x2;
-    const y3 = y2 + (WIRE_DISTANCE - SWITCH_DISTANCE - SWITCH_GAP);
+    const y3 = y2 + (wireHeight - SWITCH_OFF_INITIAL_WIRE_HEIGHT - SWITCH_GAP);
 
     const powerPinStartingX = RECT_X_OFFSET + RECT_X_DISTANCE * POWER_PIN_INDEX;
+    const x4 = powerPinStartingX + widthOffset;
+    const y4 = y3;
+
+    const x5 = x4;
+    const y5 = bottomOfClipY;
+
+    const x6 = x5 + WIRE_WIDTH;
+    const y6 = y5;
+
+    const x7 = x6;
+    const y7 = y3 + WIRE_WIDTH;
+
+    const x8 = x1;
+    const y8 = y7;
+
+    const points = `${x1},${y1} ${x2},${y2} ${x3},${y3} ${x4},${y4} ${x5},${y5} ${x6},${y6} ${x7},${y7} ${x8},${y8}`;
+    polygon.setAttribute("points", points);
+    polygon.setAttribute("fill", WIRE_COLOR);
+    group.append(polygon);
+    return group;
+  }
+
+  function removeLightWire(i: number) {
+    const switchWireEl = this.element.querySelector(
+      `#${getWireIdName(i, LIGHT_GROUP_CLASS_NAME)}`
+    );
+    switchWireEl.remove();
+  }
+
+  function createLightFromPinToGround(i: number, wireHeight: number) {
+    const group = createSvgElement("g");
+    group.setAttribute("id", `${getWireIdName(i, LIGHT_GROUP_CLASS_NAME)}`);
+    group.classList.add("wire");
+
+    const widthOffset = (RECT_WIDTH - WIRE_WIDTH) / 2;
+    const startingX = widthOffset + RECT_X_OFFSET + RECT_X_DISTANCE * i;
+    const bottomOfClipY = RECT_Y + RECT_HEIGHT;
+
+    const polygon = createSvgElement("polygon");
+
+    const x1 = startingX;
+    // const y1 = bottomOfClipY + wireHeight + SWITCH_GAP;
+    const y1 = bottomOfClipY;
+
+    const x2 = x1 + WIRE_WIDTH;
+    const y2 = y1;
+
+    const x3 = x2;
+    const y3 = y2 + wireHeight;
+
+    const powerPinStartingX = RECT_X_OFFSET + RECT_X_DISTANCE * GROUND_PIN_INDEX;
     const x4 = powerPinStartingX + widthOffset;
     const y4 = y3;
 
@@ -448,12 +500,14 @@ namespace pxsim.visuals {
       );
       for (const toggle of lightToggles) {
         toggle.addEventListener("click", () => {
-          console.log("clicked toggle");
           const toggleBody = toggle.querySelector(`.toggle`);
           const pinIndex = parseInt(toggleBody.getAttribute("data-pin-index"));
           if (this.isToggleOn(pinIndex, LIGHT_GROUP_CLASS_NAME)) {
+            removeLightWire(pinIndex);
             this.setToggleValue(pinIndex, LIGHT_GROUP_CLASS_NAME, false);
           } else {
+            const wireEl = createLightFromPinToGround(pinIndex, LIGHT_WIRE_HEIGHT);
+            this.part.el.append(wireEl);
             this.setToggleValue(pinIndex, LIGHT_GROUP_CLASS_NAME, true);
           }
         });
