@@ -38,12 +38,13 @@ const TEXT_X_OFFSET = X_OFFSET;
 const TEXT_X_DISTANCE = SPACING;
 
 const WIRE_WIDTH = 12;
-const SWITCH_GAP = 30;
+const SWITCH_WIRE_LENGTH = 30;
 
-const SWITCH_WIRE_HEIGHT = 90;
+const SWITCH_WIRE_HEIGHT = 100;
 const SWITCH_TOGGLES_Y = CLIP_HEIGHT + SWITCH_WIRE_HEIGHT + WIRE_WIDTH + 100;
 const SWITCH_GROUP_CLASS_NAME = "all-switch-toggles";
 const SWITCH_OFF_INITIAL_WIRE_HEIGHT = 30;
+const SWITCH_DEG = 45;
 
 const LIGHT_TOGGLES_Y = SWITCH_TOGGLES_Y + 100;
 const LIGHT_GROUP_CLASS_NAME = "all-light-toggles";
@@ -255,43 +256,40 @@ namespace pxsim.visuals {
     group.setAttribute("id", `${getWireIdName(i, SWITCH_GROUP_CLASS_NAME)}`);
     group.classList.add("circuit");
 
-    const xOffset = RECT_X_OFFSET + RECT_WIDTH / 2
+    const xOffset = RECT_X_OFFSET + RECT_WIDTH / 2;
     const startingX = xOffset + RECT_X_DISTANCE * i;
     const bottomOfClipY = CLIP_HEIGHT;
 
     // Draw the initial line before the gap.
     const initialLinePath = createSvgElement("path");
-    const initialLineD = `M ${startingX} ${bottomOfClipY} V ${bottomOfClipY + SWITCH_OFF_INITIAL_WIRE_HEIGHT}`
+    const initialEndingY = bottomOfClipY + SWITCH_OFF_INITIAL_WIRE_HEIGHT;
+    const initialLineD = `M ${startingX} ${bottomOfClipY} V ${initialEndingY}`;
     initialLinePath.setAttribute("d", initialLineD);
     initialLinePath.classList.add("new-wire");
     group.append(initialLinePath);
 
     // Draw the switch in the off state
-    const gapButton = createSvgElement("rect");
-    gapButton.setAttribute("x", `${startingX}`);
-    gapButton.setAttribute(
-      "y",
-      `${bottomOfClipY + SWITCH_OFF_INITIAL_WIRE_HEIGHT}`
-    );
-    gapButton.setAttribute("height", `${SWITCH_GAP}`);
-    gapButton.setAttribute("width", `${WIRE_WIDTH}`);
-    gapButton.classList.add("clickableGap", "off");
-    gapButton.setAttribute("data-pin-index", `${i}`);
-    group.append(gapButton);
+    const switchWire = createSvgElement("path");
+    const switchWireD = getDrawValueForSwitch(i, false);
+    switchWire.setAttribute("d", switchWireD);
+    switchWire.setAttribute("data-pin-index", `${i}`);
+    switchWire.classList.add("new-wire", "clickableGap", "off");
+    group.append(switchWire);
 
     // Draw the remaining line.
     const remainingLinePath = createSvgElement("path");
-    const remainingY1 = bottomOfClipY + SWITCH_OFF_INITIAL_WIRE_HEIGHT + SWITCH_GAP;
+    const remainingY1 =
+      bottomOfClipY + SWITCH_OFF_INITIAL_WIRE_HEIGHT + SWITCH_WIRE_LENGTH;
     let remainingLineD = `M ${startingX} ${remainingY1} `;
 
     // 1. Draw the downward stroke
     remainingLineD += `V ${CLIP_HEIGHT + SWITCH_WIRE_HEIGHT} `;
 
-    // 2. Draw the horizontal stroke 
+    // 2. Draw the horizontal stroke
     const powerPinStartingX = xOffset + RECT_X_DISTANCE * POWER_PIN_INDEX;
     remainingLineD += `H ${powerPinStartingX} `;
 
-    // 3. Draw the remaining vertical stroke 
+    // 3. Draw the remaining vertical stroke
     remainingLineD += `V ${bottomOfClipY} `;
 
     remainingLinePath.setAttribute("d", remainingLineD);
@@ -299,6 +297,43 @@ namespace pxsim.visuals {
     group.append(remainingLinePath);
 
     return group;
+  }
+
+  function getDrawValueForSwitch(pinIndex: number, isConnected: boolean) {
+    const xOffset = RECT_X_OFFSET + RECT_WIDTH / 2;
+    const wireStartingX = xOffset + RECT_X_DISTANCE * pinIndex;
+    const wireStartingY = CLIP_HEIGHT + SWITCH_OFF_INITIAL_WIRE_HEIGHT;
+
+    if (isConnected) {
+      const endingY = wireStartingY + SWITCH_WIRE_LENGTH;
+      return `M ${wireStartingX} ${wireStartingY} V ${endingY}`;
+    } else {
+      // Start drawing slightly above wire start, so that we have a continuous line
+      const fudgeRoom = 10; // eyeballed value
+      const x1 = wireStartingX;
+      const y1 = wireStartingY - fudgeRoom;
+
+      //
+      // h   /|
+      //   /  | adj
+      // /____|
+      //   opp
+      // cos(ang) = adj / hyp
+      // adj = hyp * cos(ang)
+      const yDistance = SWITCH_WIRE_LENGTH * Math.cos(toRadians(SWITCH_DEG));
+      const endingY = wireStartingY + yDistance;
+
+      // sin(ang) = opp / hyp
+      // opp = hyp * sin(ang)
+      const xDistance = SWITCH_WIRE_LENGTH * Math.sin(toRadians(SWITCH_DEG));
+      const endingX = wireStartingX - xDistance;
+
+      return `M ${x1} ${y1} V ${y1 + fudgeRoom} L ${endingX} ${endingY}`;
+    }
+  }
+
+  function toRadians(angle: number) {
+    return angle * (Math.PI / 180);
   }
 
   function createLightFromPinToGround(i: number, hasJump: boolean) {
@@ -322,7 +357,7 @@ namespace pxsim.visuals {
       const jumpEndLength = SWITCH_WIRE_HEIGHT + LIGHT_JUMP_HEIGHT / 2;
       const jumpEndY = y1 + jumpEndLength;
       const bezierX = `${BEZIER_CURVE_HEIGHT + x1}`;
-      const bezier = `C ${bezierX} ${jumpStartY} ${bezierX} ${jumpEndY} ${x1} ${jumpEndY}`
+      const bezier = `C ${bezierX} ${jumpStartY} ${bezierX} ${jumpEndY} ${x1} ${jumpEndY}`;
 
       const lineEndY = y1 + LIGHT_WIRE_HEIGHT;
       d = `M ${x1} ${y1} V ${jumpStartY} ${bezier} V ${lineEndY} H ${endWireX} V ${y1}`;
@@ -464,15 +499,6 @@ namespace pxsim.visuals {
               display: none;
             }
 
-            .circuit .clickableGap.off {
-              fill: transparent;
-            }
-
-            .circuit .clickableGap.on,
-            .circuit .wire {
-              fill: Silver;
-            }
-            
             .circuit polygon.triangle-base {
               fill: gray;
             }
@@ -523,11 +549,11 @@ namespace pxsim.visuals {
         gap.addEventListener("click", () => {
           const pinIndex = parseInt(gap.getAttribute("data-pin-index"));
           const pin = this.state.pins[pinIndex];
-          if (this.isGapClicked(pinIndex)) {
-            this.setGapClicked(pinIndex, false);
+          if (this.isSwitchConnected(pinIndex)) {
+            this.setSwitchIsConnected(pinIndex, false);
             pin.digitalWritePin(0);
           } else {
-            this.setGapClicked(pinIndex, true);
+            this.setSwitchIsConnected(pinIndex, true);
             pin.digitalWritePin(1);
           }
         });
@@ -543,7 +569,6 @@ namespace pxsim.visuals {
           const toggleBody = toggle.querySelector(`.toggle`);
           const pinIndex = parseInt(toggleBody.getAttribute("data-pin-index"));
           const pin = this.state.pins[pinIndex];
-          // if (this.isToggleOn(pinIndex, SWITCH_GROUP_CLASS_NAME)) {
           const toggleValue = this.getToggleValue(
             pinIndex,
             SWITCH_GROUP_CLASS_NAME
@@ -624,12 +649,12 @@ namespace pxsim.visuals {
     }
 
     private resetGap(pinIndex: number, pin: Pin) {
-      if (this.isGapClicked(pinIndex)) {
-        this.setGapClicked(pinIndex, false);
+      if (this.isSwitchConnected(pinIndex)) {
+        this.setSwitchIsConnected(pinIndex, false);
         pin.digitalWritePin(0);
       }
     }
-    
+
     private redrawLightWiresIfNeeded(removedCircuitPinIndex: number) {
       // If a pin after me has a light
       for (let i = removedCircuitPinIndex + 1; i < NUMBER_OF_GPIO_PINS; i++) {
@@ -658,7 +683,10 @@ namespace pxsim.visuals {
     }
 
     private addCircuitForLight(pinIndex: number) {
-      const wireEl = createLightFromPinToGround(pinIndex, this.lightWireHasJump(pinIndex));
+      const wireEl = createLightFromPinToGround(
+        pinIndex,
+        this.lightWireHasJump(pinIndex)
+      );
       this.part.el.append(wireEl);
     }
 
@@ -697,23 +725,24 @@ namespace pxsim.visuals {
       }
     }
 
-    private isGapClicked(pinIndex: number) {
+    private isSwitchConnected(pinIndex: number) {
       const gap = this.element.querySelector(
         `#${getWireIdName(pinIndex, SWITCH_GROUP_CLASS_NAME)} .clickableGap`
       );
       return gap.classList.contains("on");
     }
 
-    private setGapClicked(pinIndex: number, isClicked: boolean) {
+    private setSwitchIsConnected(pinIndex: number, isConnected: boolean) {
       const gap = this.element.querySelector(
         `#${getWireIdName(pinIndex, SWITCH_GROUP_CLASS_NAME)} .clickableGap`
       );
-      if (isClicked) {
-        gap.classList.remove("off");
+      gap.setAttribute("d", getDrawValueForSwitch(pinIndex, isConnected));
+      if (isConnected) {
         gap.classList.add("on");
+        gap.classList.remove("off");
       } else {
-        gap.classList.add("off");
         gap.classList.remove("on");
+        gap.classList.add("off");
       }
     }
 
