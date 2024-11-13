@@ -158,8 +158,12 @@ namespace pxsim.visuals {
     }
 
     // Add toggles add/remove switches
-    group.append(addToggles(SWITCH_TOGGLES_Y, SWITCH_GROUP_CLASS_NAME, "Add Switch"));
-    group.append(addToggles(LIGHT_TOGGLES_Y, LIGHT_GROUP_CLASS_NAME, "Add Light"));
+    group.append(
+      addToggles(SWITCH_TOGGLES_Y, SWITCH_GROUP_CLASS_NAME, "Add Switch")
+    );
+    group.append(
+      addToggles(LIGHT_TOGGLES_Y, LIGHT_GROUP_CLASS_NAME, "Add Light")
+    );
 
     return root.firstElementChild as SVGAElement;
   }
@@ -182,7 +186,10 @@ namespace pxsim.visuals {
   function createPinLabel(pinIndex: number, text: string) {
     const labelText = createSvgElement("text");
     labelText.classList.add("pin-label");
-    labelText.setAttribute("x", `${TEXT_X_OFFSET + TEXT_X_DISTANCE * pinIndex + RECT_WIDTH / 2 - 5}`);
+    labelText.setAttribute(
+      "x",
+      `${TEXT_X_OFFSET + TEXT_X_DISTANCE * pinIndex + RECT_WIDTH / 2 - 5}`
+    );
     labelText.setAttribute("y", `${TEXT_Y}`);
     labelText.setAttribute("textAnchor", "middle");
     labelText.innerHTML = text;
@@ -208,7 +215,7 @@ namespace pxsim.visuals {
 
   function createSwitchFromPinToGround(i: number) {
     const group = createSvgElement("g");
-    group.setAttribute("id", `switch${i}`);
+    group.setAttribute("id", `${getWireIdName(i, SWITCH_GROUP_CLASS_NAME)}`);
     group.classList.add("wire");
 
     const widthOffset = (RECT_WIDTH - WIRE_WIDTH) / 2;
@@ -244,8 +251,7 @@ namespace pxsim.visuals {
     const x3 = x2;
     const y3 = y2 + (WIRE_DISTANCE - SWITCH_DISTANCE - SWITCH_GAP);
 
-    const powerPinStartingX =
-      RECT_X_OFFSET + RECT_X_DISTANCE * (POWER_PIN_INDEX);
+    const powerPinStartingX = RECT_X_OFFSET + RECT_X_DISTANCE * POWER_PIN_INDEX;
     const x4 = powerPinStartingX + widthOffset;
     const y4 = y3;
 
@@ -280,16 +286,28 @@ namespace pxsim.visuals {
     group.append(labelText);
 
     for (let i = 0; i < NUMBER_OF_GPIO_PINS; i++) {
-      const toggle = createSwitchToggle(i, yOffset);
+      const toggle = createToggle(i, groupClassName, yOffset);
       group.append(toggle);
     }
 
     return group;
   }
 
-  function createSwitchToggle(pinIndex: number, overallYOffset: number) {
+  function getToggleIdName(pinIndex: number, groupClassName: string) {
+    return `${groupClassName}-pin-${pinIndex}`;
+  }
+
+  function getWireIdName(pinIndex: number, groupClassName: string) {
+    return `${groupClassName}-wire-${pinIndex}`;
+  }
+
+  function createToggle(
+    pinIndex: number,
+    groupClassName: string,
+    overallYOffset: number
+  ) {
     const group = createSvgElement("g");
-    group.id = `switch-toggle${pinIndex}`;
+    group.id = getToggleIdName(pinIndex, groupClassName);
     group.classList.add("toggle-group");
     const pinRect = createSvgElement("rect");
     pinRect.classList.add("toggle");
@@ -402,6 +420,7 @@ namespace pxsim.visuals {
         });
       }
 
+      // Add switch toggles
       const switchToggles = this.element.querySelectorAll(
         `.${SWITCH_GROUP_CLASS_NAME} .toggle-group`
       );
@@ -411,14 +430,31 @@ namespace pxsim.visuals {
           const toggleBody = toggle.querySelector(`.toggle`);
           const pinIndex = parseInt(toggleBody.getAttribute("data-pin-index"));
           const pin = this.state.pins[pinIndex];
-          if (this.isSwitchLineShowing(pinIndex)) {
-            this.setSwitchLineShowing(pinIndex, false);
+          if (this.isToggleOn(pinIndex, SWITCH_GROUP_CLASS_NAME)) {
+            this.setToggleValue(pinIndex, SWITCH_GROUP_CLASS_NAME, false);
             if (this.isGapClicked(pinIndex)) {
               this.setGapClicked(pinIndex, false);
               pin.digitalWritePin(0);
             }
           } else {
-            this.setSwitchLineShowing(pinIndex, true);
+            this.setToggleValue(pinIndex, SWITCH_GROUP_CLASS_NAME, true);
+          }
+        });
+      }
+
+      // Add light toggles
+      const lightToggles = this.element.querySelectorAll(
+        `.${LIGHT_GROUP_CLASS_NAME} .toggle-group`
+      );
+      for (const toggle of lightToggles) {
+        toggle.addEventListener("click", () => {
+          console.log("clicked toggle");
+          const toggleBody = toggle.querySelector(`.toggle`);
+          const pinIndex = parseInt(toggleBody.getAttribute("data-pin-index"));
+          if (this.isToggleOn(pinIndex, LIGHT_GROUP_CLASS_NAME)) {
+            this.setToggleValue(pinIndex, LIGHT_GROUP_CLASS_NAME, false);
+          } else {
+            this.setToggleValue(pinIndex, LIGHT_GROUP_CLASS_NAME, true);
           }
         });
       }
@@ -426,14 +462,14 @@ namespace pxsim.visuals {
 
     private isGapClicked(pinIndex: number) {
       const gap = this.element.querySelector(
-        `#switch${pinIndex} .clickableGap`
+        `#${getWireIdName(pinIndex, SWITCH_GROUP_CLASS_NAME)} .clickableGap`
       );
       return gap.getAttribute("fill") === GAP_ON_COLOR;
     }
 
     private setGapClicked(pinIndex: number, isClicked: boolean) {
       const gap = this.element.querySelector(
-        `#switch${pinIndex} .clickableGap`
+        `#${getWireIdName(pinIndex, SWITCH_GROUP_CLASS_NAME)} .clickableGap`
       );
       if (isClicked) {
         gap.setAttribute("fill", GAP_ON_COLOR);
@@ -442,18 +478,24 @@ namespace pxsim.visuals {
       }
     }
 
-    private isSwitchLineShowing(pinIndex: number) {
+    private isToggleOn(pinIndex: number, groupClassName: string) {
       const toggleBody = this.element.querySelector(
-        `#switch-toggle${pinIndex} .toggle`
+        `#${getToggleIdName(pinIndex, groupClassName)} .toggle`
       );
       return toggleBody.getAttribute("fill") === TOGGLE_ON_COLOR;
     }
 
-    private setSwitchLineShowing(pinIndex: number, isShowing: boolean) {
+    private setToggleValue(
+      pinIndex: number,
+      groupName: string,
+      isShowing: boolean
+    ) {
       const toggleBody = this.element.querySelector(
-        `#switch-toggle${pinIndex} .toggle`
+        `#${getToggleIdName(pinIndex, groupName)} .toggle`
       );
-      const switchWireEl = this.element.querySelector(`#switch${pinIndex}`);
+      const switchWireEl = this.element.querySelector(
+        `#${getWireIdName(pinIndex, groupName)}`
+      );
       if (isShowing) {
         toggleBody.setAttribute("fill", TOGGLE_ON_COLOR);
         switchWireEl.classList.add("chibi-visible");
