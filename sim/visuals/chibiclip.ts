@@ -329,6 +329,14 @@ namespace pxsim.visuals {
               font-weight: bold;
             }
 
+            .toggle-group {
+              cursor: pointer;
+            }
+            
+            .toggle-group:hover .toggle {
+              fill: gray;
+            }
+
             svg text.pin-label {
               font-family: "Courier New";
             }
