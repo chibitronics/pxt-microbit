@@ -261,6 +261,7 @@ namespace pxsim.visuals {
     initialRect.setAttribute("y", `${bottomOfClipY}`);
     initialRect.setAttribute("height", `${SWITCH_OFF_INITIAL_WIRE_HEIGHT}`);
     initialRect.setAttribute("width", `${WIRE_WIDTH}`);
+    initialRect.classList.add("wire");
     group.append(initialRect);
 
     const gapButton = createSvgElement("rect");
@@ -271,12 +272,12 @@ namespace pxsim.visuals {
     );
     gapButton.setAttribute("height", `${SWITCH_GAP}`);
     gapButton.setAttribute("width", `${WIRE_WIDTH}`);
-    gapButton.classList.add("clickableGap");
-    gapButton.classList.add("off");
+    gapButton.classList.add("clickableGap", "off");
     gapButton.setAttribute("data-pin-index", `${i}`);
     group.append(gapButton);
 
     const polygon = createSvgElement("polygon");
+    polygon.classList.add("wire");
 
     const x1 = startingX;
     const y1 = bottomOfClipY + SWITCH_OFF_INITIAL_WIRE_HEIGHT + SWITCH_GAP;
@@ -319,6 +320,7 @@ namespace pxsim.visuals {
     const bottomOfClipY = RECT_Y + RECT_HEIGHT;
 
     const polygon = createSvgElement("polygon");
+    polygon.classList.add("wire")
 
     const x1 = startingX;
     // const y1 = bottomOfClipY + wireHeight + SWITCH_GAP;
@@ -487,7 +489,7 @@ namespace pxsim.visuals {
             }
 
             .circuit .clickableGap.on,
-            .circuit rect, .circuit polygon {
+            .circuit .wire {
               fill: Silver;
             }
             
