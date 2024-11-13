@@ -8,10 +8,10 @@ const CLIP_WIDTH = 420;
 const CLIP_HEIGHT = 120;
 
 const NUMBER_OF_GPIO_PINS = 6;
-const TOTAL_NUMBER_OF_PINS = NUMBER_OF_GPIO_PINS + 1; // GPIO + ground
+const TOTAL_NUMBER_OF_PINS = NUMBER_OF_GPIO_PINS + 2; // GPIO + power + ground
 
 const ITEM_WIDTH = 30;
-const GAP = 25;
+const GAP = 20;
 const SPACING = ITEM_WIDTH + GAP;
 const ALL_ITEMS_WIDTH =
   TOTAL_NUMBER_OF_PINS * ITEM_WIDTH + GAP * (TOTAL_NUMBER_OF_PINS - 1);
@@ -129,7 +129,14 @@ namespace pxsim.visuals {
       pinGroup.append(labelText);
     }
 
-    // Add ground pin
+    // Add voltage pin
+    const powerPin = createPinRectangle(
+      TOTAL_NUMBER_OF_PINS - 2,
+      "power",
+      RECT_DEFAULT_FILL
+    );
+    group.append(powerPin);
+
     const groundPin = createPinRectangle(
       TOTAL_NUMBER_OF_PINS - 1,
       "ground",
