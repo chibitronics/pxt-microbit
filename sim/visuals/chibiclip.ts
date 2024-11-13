@@ -37,20 +37,20 @@ const TEXT_Y = RECT_Y + RECT_Y / 2;
 const TEXT_X_OFFSET = X_OFFSET;
 const TEXT_X_DISTANCE = SPACING;
 
-const WIRE_WIDTH = 20;
-const WIRE_DISTANCE = 120;
-const SWITCH_DISTANCE = 50;
-const SWITCH_GAP = 40;
+const WIRE_WIDTH = 10;
+const WIRE_DISTANCE = 90;
+const SWITCH_DISTANCE = 30;
+const SWITCH_GAP = 30;
 const WIRE_COLOR = "gray";
 const GAP_OFF_COLOR = "transparent";
 const GAP_ON_COLOR = WIRE_COLOR;
 
-const SWITCH_TOGGLES_Y = CLIP_HEIGHT + WIRE_DISTANCE + WIRE_WIDTH + 40;
+const SWITCH_TOGGLES_Y = CLIP_HEIGHT + WIRE_DISTANCE + WIRE_WIDTH + 100;
 const SWITCH_TOGGLES_GAP = 20;
 const SWITCH_TOGGLE_HEIGHT = RECT_WIDTH;
 const SWITCH_TOGGLE_WIDTH = RECT_WIDTH;
 const SWITCH_OFF_COLOR = "gainsboro";
-const SWITCH_ON_COLOR = "green";
+const SWITCH_ON_COLOR = "MediumAquamarine";
 
 const LED_TOGGLES_Y = SWITCH_TOGGLES_Y;
 
@@ -138,7 +138,7 @@ namespace pxsim.visuals {
     group.append(powerLabel);
 
     const groundPin = createPinRectangle(
-      TOTAL_NUMBER_OF_PINS - 1,
+      GROUND_PIN_INDEX,
       "ground",
       RECT_DEFAULT_FILL
     );
@@ -238,9 +238,9 @@ namespace pxsim.visuals {
     const x3 = x2;
     const y3 = y2 + (WIRE_DISTANCE - SWITCH_DISTANCE - SWITCH_GAP);
 
-    const groundPinStartingX =
-      RECT_X_OFFSET + RECT_X_DISTANCE * (TOTAL_NUMBER_OF_PINS - 1);
-    const x4 = groundPinStartingX + widthOffset;
+    const powerPinStartingX =
+      RECT_X_OFFSET + RECT_X_DISTANCE * (POWER_PIN_INDEX);
+    const x4 = powerPinStartingX + widthOffset;
     const y4 = y3;
 
     const x5 = x4;
@@ -329,6 +329,7 @@ namespace pxsim.visuals {
               font-weight: bold;
             }
 
+            .clickableGap,
             .toggle-group {
               cursor: pointer;
             }
