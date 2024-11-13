@@ -46,7 +46,10 @@ const GAP_OFF_COLOR = "transparent";
 const GAP_ON_COLOR = WIRE_COLOR;
 
 const SWITCH_TOGGLES_Y = CLIP_HEIGHT + WIRE_DISTANCE + WIRE_WIDTH + 100;
-const SWITCH_GROUP_CLASS_NAME = "all-toggles";
+const SWITCH_GROUP_CLASS_NAME = "all-switch-toggles";
+
+const LIGHT_TOGGLES_Y = SWITCH_TOGGLES_Y + 100;
+const LIGHT_GROUP_CLASS_NAME = "all-light-toggles";
 
 const TOGGLES_GAP = 20;
 const TOGGLE_HEIGHT = RECT_WIDTH;
@@ -155,7 +158,8 @@ namespace pxsim.visuals {
     }
 
     // Add toggles add/remove switches
-    group.append(addSwitchToggles(SWITCH_TOGGLES_Y, SWITCH_GROUP_CLASS_NAME, "Add Switch"));
+    group.append(addToggles(SWITCH_TOGGLES_Y, SWITCH_GROUP_CLASS_NAME, "Add Switch"));
+    group.append(addToggles(LIGHT_TOGGLES_Y, LIGHT_GROUP_CLASS_NAME, "Add Light"));
 
     return root.firstElementChild as SVGAElement;
   }
@@ -264,7 +268,7 @@ namespace pxsim.visuals {
     return group;
   }
 
-  function addSwitchToggles(yOffset: number, groupClassName: string, label: string) {
+  function addToggles(yOffset: number, groupClassName: string, label: string) {
     const group = createSvgElement("g");
     group.classList.add(groupClassName);
 
@@ -303,7 +307,7 @@ namespace pxsim.visuals {
     );
     labelText.setAttribute(
       "y",
-      `${SWITCH_TOGGLES_Y + TOGGLES_GAP + TOGGLE_HEIGHT / 2 + 4}`
+      `${overallYOffset + TOGGLES_GAP + TOGGLE_HEIGHT / 2 + 4}`
     );
     labelText.setAttribute("textAnchor", "middle");
     labelText.innerHTML = `${pinIndex}`;
