@@ -54,6 +54,18 @@ const TOGGLE_HEIGHT = RECT_WIDTH;
 const TOGGLE_WIDTH = RECT_WIDTH;
 
 const LED_TOGGLES_Y = SWITCH_TOGGLES_Y;
+const LIGHT_WIDTH = 36;
+// 
+//   |\
+// a | \ c
+//   |__\
+//     b
+// a^2 + b^2 = c^2
+// a = Math.sqrt(c^2 - b^2)
+// c = LIGHT_WIDTH
+// b = LIGHT_WIDTH / 2
+const LIGHT_HEIGHT = Math.sqrt(Math.pow(LIGHT_WIDTH, 2) - Math.pow(LIGHT_WIDTH / 2, 2));
+const LIGHT_Y = CLIP_HEIGHT + SWITCH_OFF_INITIAL_WIRE_HEIGHT;
 
 const POWER_PIN_INDEX = TOTAL_NUMBER_OF_PINS - 2;
 const GROUND_PIN_INDEX = TOTAL_NUMBER_OF_PINS - 1;
@@ -198,6 +210,26 @@ namespace pxsim.visuals {
     return labelText;
   }
 
+  function createLightTriangle(
+    pinIndex: number,
+    className: string,
+  ) {
+    const polygon = createSvgElement("polygon");
+    polygon.classList.add(className);
+    const xCenterPoint = RECT_X_OFFSET + RECT_X_DISTANCE * pinIndex + RECT_WIDTH / 2;
+
+    const x1 = xCenterPoint - LIGHT_WIDTH / 2;
+    const x2 = x1 + LIGHT_WIDTH;
+    const x3 = xCenterPoint;
+    const y1 = LIGHT_Y;
+    const y2 = LIGHT_Y;
+    const y3 = LIGHT_Y + LIGHT_HEIGHT;
+
+    const points = `${x1},${y1} ${x2},${y2} ${x3},${y3}`;
+    polygon.setAttribute("points", points);
+    return polygon;
+  }
+
   function createLightCircle(
     pinIndex: number,
     className: string,
@@ -222,7 +254,7 @@ namespace pxsim.visuals {
 
     const widthOffset = (RECT_WIDTH - WIRE_WIDTH) / 2;
     const startingX = widthOffset + RECT_X_OFFSET + RECT_X_DISTANCE * i;
-    const bottomOfClipY = RECT_Y + RECT_HEIGHT;
+    const bottomOfClipY = CLIP_HEIGHT;
 
     const initialRect = createSvgElement("rect");
     initialRect.setAttribute("x", `${startingX}`);
@@ -318,6 +350,18 @@ namespace pxsim.visuals {
     const points = `${x1},${y1} ${x2},${y2} ${x3},${y3} ${x4},${y4} ${x5},${y5} ${x6},${y6} ${x7},${y7} ${x8},${y8}`;
     polygon.setAttribute("points", points);
     group.append(polygon);
+
+    const lightGroup = createSvgElement("g");
+    lightGroup.id = getLightIdName(i, LIGHT_GROUP_CLASS_NAME);
+
+    const lightGraphicBottom = createLightTriangle(i, 'triangle-base');
+    lightGroup.append(lightGraphicBottom);
+
+    const lightGraphicTop = createLightTriangle(i, 'triangle-light');
+    lightGroup.append(lightGraphicTop);
+
+    group.append(lightGroup);
+
     return group;
   }
 
@@ -346,6 +390,10 @@ namespace pxsim.visuals {
 
   function getWireIdName(pinIndex: number, groupClassName: string) {
     return `${groupClassName}-wire-${pinIndex}`;
+  }
+
+  function getLightIdName(pinIndex: number, groupClassName: string) {
+    return `${groupClassName}-light-${pinIndex}`;
   }
 
   function createToggle(
@@ -439,6 +487,14 @@ namespace pxsim.visuals {
             .wire .clickableGap.on,
             .wire rect, .wire polygon {
               fill: Silver;
+            }
+            
+            .wire polygon.triangle-base {
+              fill: gray;
+            }
+            
+            .wire polygon.triangle-light {
+              fill: white;
             }
 
             .wire.chibi-visible {
