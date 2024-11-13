@@ -52,13 +52,17 @@ const LIGHT_WIRE_HEIGHT = 140;
 const TOGGLES_GAP = 20;
 const TOGGLE_HEIGHT = RECT_WIDTH;
 const TOGGLE_WIDTH = RECT_WIDTH;
-const TOGGLE_OFF_COLOR = "gainsboro";
-const TOGGLE_ON_COLOR = "MediumAquamarine";
 
 const LED_TOGGLES_Y = SWITCH_TOGGLES_Y;
 
 const POWER_PIN_INDEX = TOTAL_NUMBER_OF_PINS - 2;
 const GROUND_PIN_INDEX = TOTAL_NUMBER_OF_PINS - 1;
+
+enum ToggleValue {
+  On,
+  OffAndEnabled,
+  OffAndDisabled,
+}
 
 namespace pxsim.visuals {
   function createSvgElement(tagName: string) {
@@ -359,7 +363,7 @@ namespace pxsim.visuals {
     pinRect.setAttribute("y", `${overallYOffset + TOGGLES_GAP}`);
     pinRect.setAttribute("height", `${TOGGLE_HEIGHT}`);
     pinRect.setAttribute("width", `${TOGGLE_WIDTH}`);
-    pinRect.setAttribute("fill", TOGGLE_OFF_COLOR);
+    group.classList.add("off");
 
     const labelText = createSvgElement("text");
     labelText.setAttribute(
@@ -398,12 +402,26 @@ namespace pxsim.visuals {
             }
 
             .clickableGap,
-            .toggle-group {
+            .toggle-group.on,
+            .toggle-group.off {
               cursor: pointer;
             }
             
-            .toggle-group:hover .toggle {
+            .toggle-group.off:hover .toggle,
+            .toggle-group.on:hover .toggle {
               fill: gray;
+            }
+            
+            .toggle-group.disabled text {
+              fill: Silver;
+            }
+
+            .toggle-group .toggle {
+              fill: gainsboro;
+            }
+
+            .toggle-group.on .toggle {
+              fill: MediumAquamarine;
             }
 
             svg text.pin-label {
@@ -420,7 +438,7 @@ namespace pxsim.visuals {
 
             .wire .clickableGap.on,
             .wire rect, .wire polygon {
-              fill: gainsboro;
+              fill: Silver;
             }
 
             .wire.chibi-visible {
@@ -483,14 +501,22 @@ namespace pxsim.visuals {
           const toggleBody = toggle.querySelector(`.toggle`);
           const pinIndex = parseInt(toggleBody.getAttribute("data-pin-index"));
           const pin = this.state.pins[pinIndex];
-          if (this.isToggleOn(pinIndex, SWITCH_GROUP_CLASS_NAME)) {
-            this.setToggleValue(pinIndex, SWITCH_GROUP_CLASS_NAME, false);
-            if (this.isGapClicked(pinIndex)) {
-              this.setGapClicked(pinIndex, false);
-              pin.digitalWritePin(0);
-            }
-          } else {
-            this.setToggleValue(pinIndex, SWITCH_GROUP_CLASS_NAME, true);
+          // if (this.isToggleOn(pinIndex, SWITCH_GROUP_CLASS_NAME)) {
+          const toggleValue = this.getToggleValue(
+            pinIndex,
+            SWITCH_GROUP_CLASS_NAME
+          );
+          switch (toggleValue) {
+            case ToggleValue.On:
+              this.turnOffSwitch(pinIndex, pin);
+              this.enableLight(pinIndex);
+              break;
+            case ToggleValue.OffAndEnabled:
+              this.turnOnSwitch(pinIndex);
+              this.disableLight(pinIndex);
+              break;
+            case ToggleValue.OffAndDisabled:
+              break; // do nothing
           }
         });
       }
@@ -503,26 +529,103 @@ namespace pxsim.visuals {
         toggle.addEventListener("click", () => {
           const toggleBody = toggle.querySelector(`.toggle`);
           const pinIndex = parseInt(toggleBody.getAttribute("data-pin-index"));
-          if (this.isToggleOn(pinIndex, LIGHT_GROUP_CLASS_NAME)) {
-            this.setToggleValue(pinIndex, LIGHT_GROUP_CLASS_NAME, false);
-            this.removeLightWire(pinIndex);
-          } else {
-            const wireEl = createLightFromPinToGround(
-              pinIndex,
-              LIGHT_WIRE_HEIGHT
-            );
-            this.part.el.append(wireEl);
-            this.setToggleValue(pinIndex, LIGHT_GROUP_CLASS_NAME, true);
+          const pin = this.state.pins[pinIndex];
+          const toggleValue = this.getToggleValue(
+            pinIndex,
+            LIGHT_GROUP_CLASS_NAME
+          );
+          switch (toggleValue) {
+            case ToggleValue.On:
+              this.turnOffLight(pinIndex);
+              this.enableSwitch(pinIndex);
+              break;
+            case ToggleValue.OffAndEnabled:
+              this.turnOnLight(pinIndex);
+              this.disableSwitch(pinIndex, pin);
+              break;
+            case ToggleValue.OffAndDisabled:
+              break; // do nothing
           }
         });
       }
+    }
+
+    private turnOnSwitch(pinIndex: number) {
+      this.setToggleValue(pinIndex, SWITCH_GROUP_CLASS_NAME, ToggleValue.On);
+    }
+
+    private turnOffSwitch(pinIndex: number, pin: Pin) {
+      this.setToggleValue(
+        pinIndex,
+        SWITCH_GROUP_CLASS_NAME,
+        ToggleValue.OffAndEnabled
+      );
+      this.resetGap(pinIndex, pin);
+    }
+
+    private enableSwitch(pinIndex: number) {
+      this.setToggleValue(
+        pinIndex,
+        SWITCH_GROUP_CLASS_NAME,
+        ToggleValue.OffAndEnabled
+      );
+    }
+
+    private disableSwitch(pinIndex: number, pin: Pin) {
+      this.setToggleValue(
+        pinIndex,
+        SWITCH_GROUP_CLASS_NAME,
+        ToggleValue.OffAndDisabled
+      );
+      this.resetGap(pinIndex, pin);
+    }
+
+    private resetGap(pinIndex: number, pin: Pin) {
+      if (this.isGapClicked(pinIndex)) {
+        this.setGapClicked(pinIndex, false);
+        pin.digitalWritePin(0);
+      }
+    }
+
+    private turnOnLight(pinIndex: number) {
+      const wireEl = createLightFromPinToGround(pinIndex, LIGHT_WIRE_HEIGHT);
+      this.part.el.append(wireEl);
+      this.setToggleValue(pinIndex, LIGHT_GROUP_CLASS_NAME, ToggleValue.On);
+    }
+
+    private turnOffLight(pinIndex: number) {
+      this.setToggleValue(
+        pinIndex,
+        LIGHT_GROUP_CLASS_NAME,
+        ToggleValue.OffAndEnabled
+      );
+      this.removeLightWire(pinIndex);
+    }
+
+    private enableLight(pinIndex: number) {
+      this.setToggleValue(
+        pinIndex,
+        LIGHT_GROUP_CLASS_NAME,
+        ToggleValue.OffAndEnabled
+      );
+    }
+
+    private disableLight(pinIndex: number) {
+      this.setToggleValue(
+        pinIndex,
+        LIGHT_GROUP_CLASS_NAME,
+        ToggleValue.OffAndDisabled
+      );
+      this.removeLightWire(pinIndex);
     }
 
     private removeLightWire(i: number) {
       const switchWireEl = this.element.querySelector(
         `#${getWireIdName(i, LIGHT_GROUP_CLASS_NAME)}`
       );
-      switchWireEl.remove();
+      if (switchWireEl) {
+        switchWireEl.remove();
+      }
     }
 
     private isGapClicked(pinIndex: number) {
@@ -545,30 +648,47 @@ namespace pxsim.visuals {
       }
     }
 
-    private isToggleOn(pinIndex: number, groupClassName: string) {
-      const toggleBody = this.element.querySelector(
-        `#${getToggleIdName(pinIndex, groupClassName)} .toggle`
+    private getToggleValue(pinIndex: number, groupClassName: string) {
+      const toggleGroup = this.element.querySelector(
+        `#${getToggleIdName(pinIndex, groupClassName)}`
       );
-      return toggleBody.getAttribute("fill") === TOGGLE_ON_COLOR;
+      if (toggleGroup.classList.contains("on")) {
+        return ToggleValue.On;
+      } else if (toggleGroup.classList.contains("off")) {
+        return ToggleValue.OffAndEnabled;
+      } else {
+        return ToggleValue.OffAndDisabled;
+      }
     }
 
     private setToggleValue(
       pinIndex: number,
       groupName: string,
-      isShowing: boolean
+      value: ToggleValue
     ) {
-      const toggleBody = this.element.querySelector(
-        `#${getToggleIdName(pinIndex, groupName)} .toggle`
+      const toggleGroup = this.element.querySelector(
+        `#${getToggleIdName(pinIndex, groupName)}`
       );
-      const switchWireEl = this.element.querySelector(
+      const wireEl = this.element.querySelector(
         `#${getWireIdName(pinIndex, groupName)}`
       );
-      if (isShowing) {
-        toggleBody.setAttribute("fill", TOGGLE_ON_COLOR);
-        switchWireEl.classList.add("chibi-visible");
-      } else {
-        toggleBody.setAttribute("fill", TOGGLE_OFF_COLOR);
-        switchWireEl.classList.remove("chibi-visible");
+      switch (value) {
+        case ToggleValue.On:
+          toggleGroup.classList.add("on");
+          toggleGroup.classList.remove("disabled", "off");
+          wireEl.classList.add("chibi-visible");
+          break;
+        case ToggleValue.OffAndEnabled:
+          toggleGroup.classList.add("off");
+          toggleGroup.classList.remove("disabled", "on");
+          wireEl.classList.remove("chibi-visible");
+          break;
+        case ToggleValue.OffAndDisabled:
+          toggleGroup.classList.add("disabled");
+          toggleGroup.classList.remove("off", "on");
+          if (wireEl) {
+            wireEl.classList.remove("chibi-visible");
+          }
       }
     }
 
