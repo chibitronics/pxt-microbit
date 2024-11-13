@@ -595,6 +595,8 @@ namespace pxsim.visuals {
       const wireEl = createSwitchFromPinToVoltage(pinIndex);
       this.part.el.append(wireEl);
       this.addEventListenerForClickableSwitch(pinIndex);
+
+      this.redrawLightWiresIfNeeded(pinIndex);
     }
 
     private addEventListenerForClickableSwitch(pinIndex: number) {
@@ -645,9 +647,9 @@ namespace pxsim.visuals {
       );
     }
 
-    private redrawLightWiresIfNeeded(removedCircuitPinIndex: number) {
+    private redrawLightWiresIfNeeded(switchCircuitPinIndex: number) {
       // If a pin after me has a light
-      for (let i = removedCircuitPinIndex + 1; i < NUMBER_OF_GPIO_PINS; i++) {
+      for (let i = switchCircuitPinIndex + 1; i < NUMBER_OF_GPIO_PINS; i++) {
         const value = this.getToggleValue(i, LIGHT_GROUP_CLASS_NAME);
         if (value === ToggleValue.On) {
           this.removeCircuitForLight(i);
