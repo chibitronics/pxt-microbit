@@ -628,6 +628,10 @@ namespace pxsim.visuals {
     }
 
     private removeSwitchCircuit(pinIndex: number, pin: Pin) {
+      if (this.isSwitchConnected(pinIndex)) {
+        pin.digitalWritePin(0);
+      }
+
       this.setToggleValue(
         pinIndex,
         SWITCH_GROUP_CLASS_NAME,
