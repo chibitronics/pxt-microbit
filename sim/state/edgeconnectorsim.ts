@@ -48,10 +48,12 @@ namespace pxsim {
 
         addExternalVoltage() {
             this.isExternalVoltageApplied = true;
+            runtime.queueDisplayUpdate();
         }
 
         removeExternalVoltage() {
             this.isExternalVoltageApplied = false;
+            runtime.queueDisplayUpdate();
         }
 
         setPull(pull: number) {
