@@ -34,6 +34,7 @@ const CIRCLE_X_OFFSET = X_OFFSET + CIRCLE_RADIUS;
 const CIRCLE_X_DISTANCE = SPACING;
 
 const TEXT_Y = RECT_Y + RECT_Y / 2;
+const TEXT_TOP_Y = RECT_Y + RECT_Y / 4;
 const TEXT_X_OFFSET = X_OFFSET;
 const TEXT_X_DISTANCE = SPACING;
 
@@ -83,7 +84,7 @@ enum ToggleValue {
   OffAndDisabled,
 }
 
-// NOTE: These values are meaningful, and represent the Position Number of the pin 
+// NOTE: These values are meaningful, and represent the Position Number of the pin
 // in the clip. I made them a string type because it's REALLY easy to get off by
 // one bugs by mixing up the Pin Number and the Position Number, and so having
 // a string type will force a compiler error when that mistake happens.
@@ -99,8 +100,13 @@ enum VisualizerPin {
   RightGround = "Right Ground",
 }
 
+type NonGpioPin =
+  | VisualizerPin.LeftGround
+  | VisualizerPin.ThreeVolt
+  | VisualizerPin.RightGround;
+
 function visualizerPinToPositionNumber(visualizerPin: VisualizerPin) {
-  switch(visualizerPin) {
+  switch (visualizerPin) {
     case VisualizerPin.LeftGround:
       return 0;
     case VisualizerPin.Pin0:
@@ -170,17 +176,17 @@ namespace pxsim.visuals {
 
   function getTextXCoordinateForPin(visualizerPin: VisualizerPin) {
     const positionNumber = visualizerPinToPositionNumber(visualizerPin);
-    return TEXT_X_OFFSET + TEXT_X_DISTANCE * (positionNumber);
+    return TEXT_X_OFFSET + TEXT_X_DISTANCE * positionNumber;
   }
 
   function getCircleCoordinateForPin(visualizerPin: VisualizerPin) {
     const positionNumber = visualizerPinToPositionNumber(visualizerPin);
-    return CIRCLE_X_OFFSET + CIRCLE_X_DISTANCE * (positionNumber);
+    return CIRCLE_X_OFFSET + CIRCLE_X_DISTANCE * positionNumber;
   }
 
   function getRectangleXCoordinateForPin(visualizerPin: VisualizerPin) {
     const positionNumber = visualizerPinToPositionNumber(visualizerPin);
-    return RECT_X_OFFSET + RECT_X_DISTANCE * (positionNumber);
+    return RECT_X_OFFSET + RECT_X_DISTANCE * positionNumber;
   }
 
   function generateSvg(): SVGAElement {
@@ -199,60 +205,37 @@ namespace pxsim.visuals {
     clipElement.setAttribute("fill", "hsl(44.772, 100%, 61%)"); //chibiyellow
     group.append(clipElement);
 
-    const leftGroundPin = createPinRectangle(
+    // Add left ground
+    const leftGroundPin = createNonGpioPin(
       VisualizerPin.LeftGround,
       "ground",
-      RECT_DEFAULT_FILL
+      "GND",
+      "-"
     );
     group.append(leftGroundPin);
-    const leftGroundPinLabel = createPinLabel(VisualizerPin.LeftGround, "-", true);
-    group.append(leftGroundPinLabel);
 
     // Add gpio pins
     for (let i = 0; i < NUMBER_OF_GPIO_PINS; i++) {
-      const visualizerPin = gpioPinNumberToVisalizerPin(i);
-      const pinGroup = createSvgElement("g");
-      pinGroup.setAttribute("id", `pin${i}`);
+      const pinGroup = createGpioPin(i);
       group.append(pinGroup);
-
-      const defaultCircle = createLightCircle(
-        visualizerPin,
-        "default",
-        CIRCLE_DEFAULT_FILL
-      );
-      pinGroup.append(defaultCircle);
-
-      const levelCircle = createLightCircle(visualizerPin, "level", "transparent");
-      pinGroup.append(levelCircle);
-
-      const defaultRect = createPinRectangle(visualizerPin, "default", RECT_DEFAULT_FILL);
-      pinGroup.append(defaultRect);
-
-      const levelRect = createPinRectangle(visualizerPin, "level", "transparent");
-      pinGroup.append(levelRect);
-
-      const label = createPinLabel(visualizerPin, `${i}`);
-      pinGroup.append(label);
     }
 
-    // Add power & ground pins
-    const powerPin = createPinRectangle(
+    // Add power & right ground pins
+    const voltagePin = createNonGpioPin(
       VisualizerPin.ThreeVolt,
       "power",
-      RECT_DEFAULT_FILL
+      "3V",
+      "+"
     );
-    group.append(powerPin);
-    const powerLabel = createPinLabel(VisualizerPin.ThreeVolt, "+");
-    group.append(powerLabel);
+    group.append(voltagePin);
 
-    const rightGroundPin = createPinRectangle(
+    const rightGround = createNonGpioPin(
       VisualizerPin.RightGround,
-      "ground",
-      RECT_DEFAULT_FILL
+      "right-ground",
+      "GND",
+      "-"
     );
-    group.append(rightGroundPin);
-    const rightGroundPinLabel = createPinLabel(VisualizerPin.RightGround, "-");
-    group.append(rightGroundPinLabel);
+    group.append(rightGround);
 
     // Add toggles add/remove switches
     group.append(
@@ -265,6 +248,56 @@ namespace pxsim.visuals {
     return root.firstElementChild as SVGAElement;
   }
 
+  function createGpioPin(pinNumber: number) {
+    const visualizerPin = gpioPinNumberToVisalizerPin(pinNumber);
+    const pinGroup = createSvgElement("g");
+    pinGroup.setAttribute("id", `pin${pinNumber}`);
+
+    const defaultCircle = createLightCircle(
+      visualizerPin,
+      "default",
+      CIRCLE_DEFAULT_FILL
+    );
+    pinGroup.append(defaultCircle);
+
+    const levelCircle = createLightCircle(
+      visualizerPin,
+      "level",
+      "transparent"
+    );
+    pinGroup.append(levelCircle);
+
+    const defaultRect = createPinRectangle(
+      visualizerPin,
+      "default",
+      RECT_DEFAULT_FILL
+    );
+    pinGroup.append(defaultRect);
+
+    const levelRect = createPinRectangle(visualizerPin, "level", "transparent");
+    pinGroup.append(levelRect);
+
+    const label = createPinLabel(visualizerPin, `${pinNumber}`);
+    pinGroup.append(label);
+    return pinGroup;
+  }
+
+  function createNonGpioPin(
+    pin: NonGpioPin,
+    className: string,
+    topLabel: string,
+    bottomLabel: string
+  ) {
+    const group = createSvgElement("g");
+    const powerPin = createPinRectangle(pin, className, RECT_DEFAULT_FILL);
+    group.append(powerPin);
+    const bottomLabelEl = createPinLabel(pin, bottomLabel);
+    group.append(bottomLabelEl);
+    const topLabelEl = createPinTopLabel(pin, topLabel);
+    group.append(topLabelEl);
+    return group;
+  }
+
   function createPinRectangle(
     visualizerPin: VisualizerPin,
     className: string,
@@ -272,7 +305,10 @@ namespace pxsim.visuals {
   ) {
     const pinRect = createSvgElement("rect");
     pinRect.classList.add(className);
-    pinRect.setAttribute("x", `${getRectangleXCoordinateForPin(visualizerPin)}`);
+    pinRect.setAttribute(
+      "x",
+      `${getRectangleXCoordinateForPin(visualizerPin)}`
+    );
     pinRect.setAttribute("y", `${RECT_Y}`);
     pinRect.setAttribute("height", `${RECT_HEIGHT}`);
     pinRect.setAttribute("width", `${RECT_WIDTH}`);
@@ -280,20 +316,42 @@ namespace pxsim.visuals {
     return pinRect;
   }
 
-  function createPinLabel(visualizerPin: VisualizerPin, text: string, isGround = false) {
+  function createPinLabel(
+    visualizerPin: VisualizerPin,
+    text: string
+  ) {
+    return drawPinText(visualizerPin, text, "pin-label", TEXT_Y);
+  }
+
+  function createPinTopLabel(
+    visualizerPin: VisualizerPin,
+    text: string
+  ) {
+    return drawPinText(visualizerPin, text, "pin-top-label", TEXT_TOP_Y);
+  }
+
+  function drawPinText(
+    visualizerPin: VisualizerPin,
+    text: string,
+    className: string,
+    yPosition: number,
+  ) {
     const labelText = createSvgElement("text");
-    labelText.classList.add("pin-label");
+    labelText.classList.add(className);
     labelText.setAttribute(
       "x",
-      `${getTextXCoordinateForPin(visualizerPin) + RECT_WIDTH / 2 - 5}`
+      `${getTextXCoordinateForPin(visualizerPin) + RECT_WIDTH / 2}`
     );
-    labelText.setAttribute("y", `${TEXT_Y}`);
-    labelText.setAttribute("textAnchor", "middle");
+    labelText.setAttribute("y", `${yPosition}`);
     labelText.innerHTML = text;
     return labelText;
   }
 
-  function createLightTriangle(visualizerPin: VisualizerPin, className: string) {
+
+  function createLightTriangle(
+    visualizerPin: VisualizerPin,
+    className: string
+  ) {
     const polygon = createSvgElement("polygon");
     polygon.classList.add(className);
     const xCenterPoint =
@@ -330,10 +388,14 @@ namespace pxsim.visuals {
 
   function createSwitchFromPinToVoltage(pinNumber: number) {
     const group = createSvgElement("g");
-    group.setAttribute("id", `${getWireIdName(pinNumber, SWITCH_GROUP_CLASS_NAME)}`);
+    group.setAttribute(
+      "id",
+      `${getWireIdName(pinNumber, SWITCH_GROUP_CLASS_NAME)}`
+    );
     const visualizerPin = gpioPinNumberToVisalizerPin(pinNumber);
 
-    const startingX = getRectangleXCoordinateForPin(visualizerPin) + RECT_WIDTH / 2;
+    const startingX =
+      getRectangleXCoordinateForPin(visualizerPin) + RECT_WIDTH / 2;
     const bottomOfClipY = CLIP_HEIGHT;
 
     // Draw the initial line before the gap.
@@ -368,7 +430,8 @@ namespace pxsim.visuals {
     remainingLineD += `V ${CLIP_HEIGHT + SWITCH_WIRE_HEIGHT} `;
 
     // 2. Draw the horizontal stroke
-    const powerPinStartingX = getRectangleXCoordinateForPin(VisualizerPin.ThreeVolt) + RECT_WIDTH / 2;
+    const powerPinStartingX =
+      getRectangleXCoordinateForPin(VisualizerPin.ThreeVolt) + RECT_WIDTH / 2;
     remainingLineD += `H ${powerPinStartingX} `;
 
     // 3. Draw the remaining vertical stroke
@@ -383,7 +446,8 @@ namespace pxsim.visuals {
 
   function getDrawValueForSwitch(pinNumber: number, isConnected: boolean) {
     const visualizerPin = gpioPinNumberToVisalizerPin(pinNumber);
-    const wireStartingX = getRectangleXCoordinateForPin(visualizerPin) + RECT_WIDTH / 2;
+    const wireStartingX =
+      getRectangleXCoordinateForPin(visualizerPin) + RECT_WIDTH / 2;
     const wireStartingY = CLIP_HEIGHT + SWITCH_OFF_INITIAL_WIRE_HEIGHT;
 
     if (isConnected) {
@@ -425,16 +489,22 @@ namespace pxsim.visuals {
   function createLightFromPinToGround(pinNumber: number, hasJump: boolean) {
     const visualizerPin = gpioPinNumberToVisalizerPin(pinNumber);
     const group = createSvgElement("g");
-    group.setAttribute("id", `${getWireIdName(pinNumber, LIGHT_GROUP_CLASS_NAME)}`);
+    group.setAttribute(
+      "id",
+      `${getWireIdName(pinNumber, LIGHT_GROUP_CLASS_NAME)}`
+    );
 
-    const startingX = getRectangleXCoordinateForPin(visualizerPin) + RECT_WIDTH / 2;
+    const startingX =
+      getRectangleXCoordinateForPin(visualizerPin) + RECT_WIDTH / 2;
     const bottomOfClipY = RECT_Y + RECT_HEIGHT;
     const path = createSvgElement("path");
     path.classList.add(WIRE_CLASS_NAME);
 
     const x1 = startingX;
     const y1 = bottomOfClipY;
-    const leftGroundPositionNumber = visualizerPinToPositionNumber(VisualizerPin.LeftGround);
+    const leftGroundPositionNumber = visualizerPinToPositionNumber(
+      VisualizerPin.LeftGround
+    );
     const lengthOfWire = RECT_X_DISTANCE * leftGroundPositionNumber;
     const endWireX = RECT_X_OFFSET + RECT_WIDTH / 2 + lengthOfWire;
 
@@ -459,10 +529,16 @@ namespace pxsim.visuals {
     const lightGroup = createSvgElement("g");
     lightGroup.id = getLightIdName(pinNumber);
 
-    const lightGraphicBottom = createLightTriangle(visualizerPin, "triangle-base");
+    const lightGraphicBottom = createLightTriangle(
+      visualizerPin,
+      "triangle-base"
+    );
     lightGroup.append(lightGraphicBottom);
 
-    const lightGraphicTop = createLightTriangle(visualizerPin, "triangle-light");
+    const lightGraphicTop = createLightTriangle(
+      visualizerPin,
+      "triangle-light"
+    );
     lightGraphicTop.setAttribute("fill", "transparent");
     lightGraphicTop.classList.add("off");
     lightGroup.append(lightGraphicTop);
@@ -479,7 +555,7 @@ namespace pxsim.visuals {
     const labelText = createSvgElement("text");
     labelText.setAttribute("x", "0");
     labelText.setAttribute("y", `${yOffset}`);
-    labelText.setAttribute("textAnchor", "left");
+    labelText.setAttribute("text-anchor", "left");
     labelText.innerHTML = label;
     group.append(labelText);
 
@@ -514,7 +590,7 @@ namespace pxsim.visuals {
     const pinRect = createSvgElement("rect");
     pinRect.classList.add("toggle");
     pinRect.setAttribute(PIN_INDEX_DATA_NAME, `${pinNumber}`);
-    pinRect.setAttribute("x", `${(TOGGLES_X_DISTANCE) * pinNumber}`);
+    pinRect.setAttribute("x", `${TOGGLES_X_DISTANCE * pinNumber}`);
     pinRect.setAttribute("y", `${overallYOffset + TOGGLES_GAP}`);
     pinRect.setAttribute("height", `${TOGGLE_HEIGHT}`);
     pinRect.setAttribute("width", `${TOGGLE_WIDTH}`);
@@ -523,13 +599,13 @@ namespace pxsim.visuals {
     const labelText = createSvgElement("text");
     labelText.setAttribute(
       "x",
-      `${TOGGLES_X_DISTANCE * pinNumber + TOGGLE_WIDTH / 2 - 3}`
+      `${TOGGLES_X_DISTANCE * pinNumber + TOGGLE_WIDTH / 2}`
     );
     labelText.setAttribute(
       "y",
       `${overallYOffset + TOGGLES_GAP + TOGGLE_HEIGHT / 2 + 4}`
     );
-    labelText.setAttribute("textAnchor", "middle");
+    labelText.setAttribute("text-anchor", "middle");
     labelText.innerHTML = `${pinNumber}`;
     group.append(pinRect);
     group.append(labelText);
@@ -579,8 +655,13 @@ namespace pxsim.visuals {
               fill: MediumAquamarine;
             }
 
-            svg text.pin-label {
+            .pin-label, .pin-top-label {
               font-family: "Courier New";
+              text-anchor: middle;
+            }
+
+            svg text.pin-top-label {
+              font-size: 12px;
             }
 
             polygon.triangle-base {
