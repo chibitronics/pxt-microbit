@@ -8,6 +8,14 @@ namespace pxsim {
         Touch = 0x0010
     }
 
+    // Describes whether the last write an analog write, digital write, or if no write
+    // has ever happened.
+    export enum WriteMode {
+        NoWrite,
+        Analog,
+        Digital
+    }
+
     export class Pin {
         constructor(public id: number) { }
         touched = false;
@@ -15,6 +23,7 @@ namespace pxsim {
         period = 0;
         servoAngle = 0;
         mode = PinFlags.Unused;
+        lastWriteMode = WriteMode.NoWrite; // Added for chibi-clip visualizer
         pitch = false;
         pull = 0; // PullDown
         servoContinuous = false;
@@ -26,6 +35,7 @@ namespace pxsim {
 
         digitalWritePin(value: number) {            
             this.mode = PinFlags.Digital | PinFlags.Output;
+            this.lastWriteMode = WriteMode.Digital;
             this.value = value > 0 ? 200 : 0;
             runtime.queueDisplayUpdate();
         }
@@ -47,6 +57,7 @@ namespace pxsim {
         analogWritePin(value: number) {
             value = value >> 0;
             this.mode = PinFlags.Analog | PinFlags.Output;
+            this.lastWriteMode = WriteMode.Analog;
             this.value = Math.max(0, Math.min(1023, value));
             runtime.queueDisplayUpdate();
         }

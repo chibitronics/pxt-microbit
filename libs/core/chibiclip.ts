@@ -27,7 +27,7 @@ const pinEffectStatuses: Array<EffectStatus> = [
 
 type PinCallback = () => void;
 
-type PinEventHandler = {
+type EventHandlersForPin = {
   onPressed: PinCallback | null;
   onReleased: PinCallback | null;
   onChanged: PinCallback | null;
@@ -37,7 +37,7 @@ type PinEventHandler = {
 
 const TOTAL_GPIO_PINS = 6;
 
-const pinToEventHandlers: Array<PinEventHandler> = [];
+const pinToEventHandlers: Array<EventHandlersForPin> = [];
 
 const prevPinValues: Array<number> = [
   0, // Pin 0
@@ -56,7 +56,7 @@ namespace ChibiClip {
   function init() {
     // Initialize empty event handlers.
     for (let i = 0; i < TOTAL_GPIO_PINS; i++) {
-      const empty: PinEventHandler = {
+      const empty: EventHandlersForPin = {
         onPressed: null,
         onReleased: null,
         onChanged: null,
@@ -66,14 +66,30 @@ namespace ChibiClip {
       pinToEventHandlers[i] = empty;
     }
 
+    // TODO: This is fragile!! Should rewrite to something more robust against future changes.
+    const isAtLeastOneHandlerSet = (handler: EventHandlersForPin) => {
+      return (
+        handler.onChanged !== null ||
+        handler.onHigh !== null ||
+        handler.onLow !== null ||
+        handler.onPressed !== null ||
+        handler.onReleased !== null
+      );
+    };
+
     // Add a forever loop in the namespace to poll for pin event changes.
     basic.forever(() => {
       for (let pinIndex = 0; pinIndex < TOTAL_GPIO_PINS; pinIndex++) {
-        const prevPinValue = prevPinValues[pinIndex];
-        const currentPinValue = pins.digitalReadPin(indexToDigitalPin(pinIndex));
-        prevPinValues[pinIndex] = currentPinValue;
-
         const handlersForPin = pinToEventHandlers[pinIndex];
+
+        if (!isAtLeastOneHandlerSet(handlersForPin)) {
+          continue;
+        }
+        const prevPinValue = prevPinValues[pinIndex];
+        const currentPinValue = pins.digitalReadPin(
+          indexToDigitalPin(pinIndex)
+        );
+        prevPinValues[pinIndex] = currentPinValue;
 
         const isChanged = prevPinValue !== currentPinValue;
         const lowToHigh = isChanged && currentPinValue > 0;

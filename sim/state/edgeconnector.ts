@@ -42,6 +42,7 @@ namespace pxsim.pins {
         let pin = getPin(pinId);
         if (!pin) return;
         pin.mode = PinFlags.Digital | PinFlags.Output;
+        pin.lastWriteMode = WriteMode.Digital;
         pin.value = value > 0 ? 1023 : 0;
         runtime.queueDisplayUpdate();
     }
@@ -63,6 +64,7 @@ namespace pxsim.pins {
         let pin = getPin(pinId);
         if (!pin) return;
         pin.mode = PinFlags.Analog | PinFlags.Output;
+        pin.lastWriteMode = WriteMode.Analog;
         pin.value = value | 0;
         runtime.queueDisplayUpdate();
     }
