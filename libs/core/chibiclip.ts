@@ -10,7 +10,8 @@ type DigitalPinEventParameter =
   | "HIGH"
   | "LOW";
 type DigitalPinValueType = "HIGH" | "LOW";
-type EffectString = "twinkle" | "heartbeat" | "blink" | "sos";
+// TODO: Some of these *also* aren't exposed anymore in the public API, so let's clean up later.
+type EffectString = "twinkle" | "heartbeat" | "blink" | "sos" | "fade";
 
 enum EffectStatus {
   NoEffect,
@@ -176,8 +177,8 @@ namespace ChibiClip {
   //% block="show $effect on $pin"
   //% effect.fieldEditor="textdropdown"
   //% effect.fieldOptions.decompileLiterals=true
-  //% effect.fieldOptions.values='twinkle,heartbeat,blink,sos'
-  //% effect.defl='twinkle'
+  //% effect.fieldOptions.values='blink,fade'
+  //% effect.defl='blink'
   //% pin.fieldEditor="textdropdown"
   //% pin.fieldOptions.decompileLiterals=true
   //% pin.fieldOptions.values='A0,A1,A2,A3,A4,A5'
@@ -208,57 +209,15 @@ namespace ChibiClip {
       case "heartbeat":
         return heartbeat();
 
-      case "blink":
-        return blink();
+      case "fade":
+        return fade();
 
       case "sos":
         return sos();
-    }
-  }
 
-  /**
-   *
-   */
-  //% block="is $pin $value"
-  //% pin.fieldEditor="textdropdown"
-  //% pin.fieldOptions.decompileLiterals=true
-  //% pin.fieldOptions.values='D0,D1,D2,D3,D4,D5'
-  //% pin.defl='D0'
-  //% value.fieldEditor="textdropdown"
-  //% value.fieldOptions.decompileLiterals=true
-  //% value.fieldOptions.values='HIGH,LOW'
-  //% value.defl='HIGH'
-  //% parts=chibiclip
-  //% group="Sensing"
-  //% weight=2
-  export function isPinValue(
-    pin: DigitalPinBlockParameter,
-    value: DigitalPinValueType
-  ): boolean {
-    const digitalPin = stringToDigitalPin(pin);
-    const pinValue = pins.digitalReadPin(digitalPin);
-    if (value === "HIGH") {
-      return pinValue > 0;
-    } else if (value === "LOW") {
-      return pinValue === 0;
+      case "blink":
+        return blink();
     }
-    console.error(`Parameter value=${value} is invalid`);
-    return false;
-  }
-
-  //% block="read level $pin"
-  //% pin.fieldEditor="textdropdown"
-  //% pin.fieldOptions.values='A0,A1,A2,A3,A4,A5'
-  //% pin.defl='A0'
-  //% parts=chibiclip
-  //% group="Sensing"
-  //% weight=1
-  export function readPinLevel(pin: AnalogPinBlockParameter): number {
-    const analogPin = stringToAnalogPin(pin);
-    const pinValue = pins.analogReadPin(analogPin);
-    // This pin value will be between 0 and 1023, so let's map it to 0 to 100
-    const level = Math.round((pinValue / ANALOG_PIN_MAX_VALUE) * 100);
-    return level;
   }
 
   /**
@@ -382,7 +341,16 @@ function twinkle(tempo = 16) {
   return allCommands;
 }
 
-function blink(tempo = 16) {
+function blink() {
+  const allCommands: Array<Command> = [];
+  allCommands.push({ type: CommandType.Write, value: ANALOG_PIN_MAX_VALUE });
+  allCommands.push({ type: CommandType.Pause, durationMs: 500 });
+  allCommands.push({ type: CommandType.Write, value: 0 });
+  allCommands.push({ type: CommandType.Pause, durationMs: 500 });
+  return allCommands;
+}
+
+function fade(tempo = 16) {
   const { commands: firstCommands } = generateCommandsForFade(
     0,
     ANALOG_PIN_MAX_VALUE,
