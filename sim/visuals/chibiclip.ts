@@ -850,7 +850,7 @@ namespace pxsim.visuals {
 
         if (pin.isExternalVoltageApplied) {
           this.updateDigitalDisplayWithValue(i, true);
-          return;
+          continue;
         }
 
         const isAnalog = pin.lastWriteMode === WriteMode.Analog;
