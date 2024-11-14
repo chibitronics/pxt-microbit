@@ -682,9 +682,6 @@ namespace pxsim.visuals {
     private addLightCircuit(pinIndex: number) {
       this.addCircuitElementsForLight(pinIndex);
       this.setToggleValue(pinIndex, LIGHT_GROUP_CLASS_NAME, ToggleValue.On);
-
-      // Call update state to refresh the light if needed.
-      this.updateState();
     }
 
     private addCircuitElementsForLight(pinIndex: number) {
@@ -693,6 +690,9 @@ namespace pxsim.visuals {
         this.lightWireHasJump(pinIndex)
       );
       this.part.el.append(wireEl);
+
+      // Call update state to refresh the light if needed.
+      this.updateState();
     }
 
     private removeLightCircuit(pinIndex: number) {
