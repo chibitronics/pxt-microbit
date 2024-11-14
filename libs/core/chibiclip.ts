@@ -1,6 +1,8 @@
 const ANALOG_PIN_MAX_VALUE = 1023;
 type DigitalPinBlockParameter = "D0" | "D1" | "D2" | "D3" | "D4" | "D5";
 type AnalogPinBlockParameter = "A0" | "A1" | "A2" | "A3" | "A4" | "A5";
+
+// TODO: Some of these aren't exposed anymore in the public API, so let's clean up later.
 type DigitalPinEventParameter =
   | "pressed"
   | "released"
@@ -269,7 +271,7 @@ namespace ChibiClip {
   //% pin.defl='D0'
   //% eventType.fieldEditor="textdropdown"
   //% eventType.fieldOptions.decompileLiterals=true
-  //% eventType.fieldOptions.values='pressed,released,changed,HIGH,LOW'
+  //% eventType.fieldOptions.values='pressed,released'
   //% eventType.defl='pressed'
   //% parts=chibiclip
   //% group="Sensing"
