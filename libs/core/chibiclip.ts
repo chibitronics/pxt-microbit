@@ -1,6 +1,6 @@
 const ANALOG_PIN_MAX_VALUE = 1023;
-type DigitalPinBlockParameter = "D0" | "D1" | "D2" | "D3" | "D4" | "D5";
-type AnalogPinBlockParameter = "A0" | "A1" | "A2" | "A3" | "A4" | "A5";
+type DigitalPinBlockParameter = "Pin 0" | "Pin 1" | "Pin 2" | "Pin 3" | "Pin 4" | "Pin 5";
+type AnalogPinBlockParameter = DigitalPinBlockParameter;
 
 // TODO: Some of these aren't exposed anymore in the public API, so let's clean up later.
 type DigitalPinEventParameter =
@@ -125,8 +125,8 @@ namespace ChibiClip {
   //% block="set $pin to $on"
   //% pin.fieldEditor="textdropdown"
   //% pin.fieldOptions.decompileLiterals=true
-  //% pin.fieldOptions.values='D0,D1,D2,D3,D4,D5'
-  //% pin.defl='D0'
+  //% pin.fieldOptions.values='Pin 0,Pin 1,Pin 2,Pin 3,Pin 4,Pin 5'
+  //% pin.defl='Pin 0'
   //% on.shadow="toggleOnOff"
   //% parts=chibiclip
   //% group="Lights"
@@ -150,8 +150,8 @@ namespace ChibiClip {
   //% block="set $pin level to $level"
   //% pin.fieldEditor="textdropdown"
   //% pin.fieldOptions.decompileLiterals=true
-  //% pin.fieldOptions.values='A0,A1,A2,A3,A4,A5'
-  //% pin.defl='A0'
+  //% pin.fieldOptions.values='Pin 0,Pin 1,Pin 2,Pin 3,Pin 4,Pin 5'
+  //% pin.defl='Pin 0'
   //% level.min=0 level.max=100
   //% parts=chibiclip
   //% group="Lights"
@@ -181,8 +181,8 @@ namespace ChibiClip {
   //% effect.defl='blink'
   //% pin.fieldEditor="textdropdown"
   //% pin.fieldOptions.decompileLiterals=true
-  //% pin.fieldOptions.values='A0,A1,A2,A3,A4,A5'
-  //% pin.defl='A0'
+  //% pin.fieldOptions.values='Pin 0,Pin 1,Pin 2,Pin 3,Pin 4,Pin 5'
+  //% pin.defl='Pin 0'
   //% parts=chibiclip
   //% group="Lights"
   //% weight=1
@@ -226,8 +226,8 @@ namespace ChibiClip {
   //% block="when $pin is $eventType"
   //% pin.fieldEditor="textdropdown"
   //% pin.fieldOptions.decompileLiterals=true
-  //% pin.fieldOptions.values='D0,D1,D2,D3,D4,D5'
-  //% pin.defl='D0'
+  //% pin.fieldOptions.values='Pin 0,Pin 1,Pin 2,Pin 3,Pin 4,Pin 5'
+  //% pin.defl='Pin 0'
   //% eventType.fieldEditor="textdropdown"
   //% eventType.fieldOptions.decompileLiterals=true
   //% eventType.fieldOptions.values='pressed,released'
@@ -319,10 +319,10 @@ function stringToDigitalPin(pinInput: DigitalPinBlockParameter): DigitalPin {
 }
 
 function stringToPinNumber(pinInput: string): number {
-  if (pinInput.length !== 2) {
+  if (pinInput.length !== 5) {
     throw `Parameter is in unexpected format: ${pinInput}`;
   }
-  return parseInt(pinInput[1]);
+  return parseInt(pinInput[4]);
 }
 
 function twinkle(tempo = 16) {
