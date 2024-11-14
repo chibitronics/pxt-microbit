@@ -32,7 +32,6 @@ namespace pxsim {
         servoContinuous = false;
 
         digitalReadPin(): number {
-            console.log('reading pin!!!');
             this.mode = PinFlags.Digital | PinFlags.Input;
             if (this.isExternalVoltageApplied) {
                 return 1;

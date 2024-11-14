@@ -826,7 +826,6 @@ namespace pxsim.visuals {
 
         const isAnalog = pin.lastWriteMode === WriteMode.Analog;
         const isDigital = pin.lastWriteMode === WriteMode.Digital;
-        console.log(`pin ${i} value is ${pin.analogReadPin()}`);
         if (isAnalog) {
           this.setAnalogDisplay(i);
         } else if (isDigital) {
@@ -846,7 +845,6 @@ namespace pxsim.visuals {
       pinFillEl.setAttribute("fill", "transparent");
       pinLedFillEl.removeAttribute("stroke");
       pinLedFillEl.removeAttribute("filter");
-      console.log(`resetting pin ${index}`);
     }
 
     private setDigitalDisplay(index: number) {

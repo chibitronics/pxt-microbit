@@ -32,7 +32,6 @@ namespace pxsim.pins {
     export let edgeConnectorSoundDisabled = false;
 
     export function digitalReadPin(pinId: number): number {
-        console.log('digital read!!!');
         let pin = getPin(pinId);
         if (!pin) return -1;
         pin.mode = PinFlags.Digital | PinFlags.Input;
