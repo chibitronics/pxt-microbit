@@ -8,6 +8,8 @@ namespace pxsim {
         Touch = 0x0010
     }
 
+    export const PIN_MAX_VALUE = 1023;
+
     // Describes whether the last write an analog write, digital write, or if no write
     // has ever happened.
     export enum WriteMode {
@@ -24,12 +26,17 @@ namespace pxsim {
         servoAngle = 0;
         mode = PinFlags.Unused;
         lastWriteMode = WriteMode.NoWrite; // Added for chibi-clip visualizer
+        isExternalVoltageApplied = false; // Added for chibi-clip visualizer
         pitch = false;
         pull = 0; // PullDown
         servoContinuous = false;
 
         digitalReadPin(): number {
+            console.log('reading pin!!!');
             this.mode = PinFlags.Digital | PinFlags.Input;
+            if (this.isExternalVoltageApplied) {
+                return 1;
+            }
             return this.value > 100 ? 1 : 0;
         }
 
@@ -40,17 +47,28 @@ namespace pxsim {
             runtime.queueDisplayUpdate();
         }
 
+        addExternalVoltage() {
+            this.isExternalVoltageApplied = true;
+        }
+
+        removeExternalVoltage() {
+            this.isExternalVoltageApplied = false;
+        }
+
         setPull(pull: number) {
             this.pull = pull;
             switch(pull) {
                 case PinPullMode.PullDown: this.value = 0; break;
-                case PinPullMode.PullUp: this.value = 1023; break;
-                default: this.value = Math_.randomRange(0, 1023); break;
+                case PinPullMode.PullUp: this.value = PIN_MAX_VALUE; break;
+                default: this.value = Math_.randomRange(0, PIN_MAX_VALUE); break;
             }
         }
 
         analogReadPin(): number {
             this.mode = PinFlags.Analog | PinFlags.Input;
+            if (this.isExternalVoltageApplied) {
+                return PIN_MAX_VALUE;
+            }
             return this.value || 0;
         }
 
@@ -58,7 +76,7 @@ namespace pxsim {
             value = value >> 0;
             this.mode = PinFlags.Analog | PinFlags.Output;
             this.lastWriteMode = WriteMode.Analog;
-            this.value = Math.max(0, Math.min(1023, value));
+            this.value = Math.max(0, Math.min(PIN_MAX_VALUE, value));
             runtime.queueDisplayUpdate();
         }
 

@@ -615,10 +615,10 @@ namespace pxsim.visuals {
         const pin = this.getPinFromIndexNumber(pinIndex);
         if (this.isSwitchConnected(pinIndex)) {
           this.setSwitchIsConnected(pinIndex, false);
-          pin.digitalWritePin(0);
+          pin.removeExternalVoltage();
         } else {
           this.setSwitchIsConnected(pinIndex, true);
-          pin.digitalWritePin(1);
+          pin.addExternalVoltage();
         }
       });
     }
@@ -629,7 +629,7 @@ namespace pxsim.visuals {
 
     private removeSwitchCircuit(pinIndex: number, pin: Pin) {
       if (this.isSwitchConnected(pinIndex)) {
-        pin.digitalWritePin(0);
+        pin.removeExternalVoltage();
       }
 
       this.setToggleValue(
@@ -819,9 +819,14 @@ namespace pxsim.visuals {
         const pin = this.getPinFromIndexNumber(i);
         this.resetPin(i);
 
+        if (pin.isExternalVoltageApplied) {
+          this.updateDigitalDisplayWithValue(i, true);
+          return;
+        }
+
         const isAnalog = pin.lastWriteMode === WriteMode.Analog;
         const isDigital = pin.lastWriteMode === WriteMode.Digital;
-        console.log(`write mode for pin ${i} is ${pin.lastWriteMode}`);
+        console.log(`pin ${i} value is ${pin.analogReadPin()}`);
         if (isAnalog) {
           this.setAnalogDisplay(i);
         } else if (isDigital) {
@@ -839,14 +844,18 @@ namespace pxsim.visuals {
       pinFillEl.setAttribute("height", `${RECT_HEIGHT}`);
       pinFillEl.setAttribute("y", `${RECT_Y}`);
       pinFillEl.setAttribute("fill", "transparent");
-      pinFillEl.removeAttribute("stroke");
-      pinFillEl.removeAttribute("filter");
+      pinLedFillEl.removeAttribute("stroke");
+      pinLedFillEl.removeAttribute("filter");
+      console.log(`resetting pin ${index}`);
     }
 
     private setDigitalDisplay(index: number) {
       const pin = this.getPinFromIndexNumber(index);
       const isOn = pin.value > 0;
+      this.updateDigitalDisplayWithValue(index, isOn);
+    }
 
+    private updateDigitalDisplayWithValue(index: number, isOn: boolean) {
       const pinFillEl = this.element.querySelector(`#pin${index} rect.level`);
       const pinLedFillEl = this.element.querySelector(
         `#pin${index} circle.level`
@@ -919,6 +928,8 @@ namespace pxsim.visuals {
       // 3 - Pin 13
       // 4 - Pin 14
       // 5 - Pin 15
+      // This must maps the equivalent code in core/chibipclip.ts
+      // TODO: make this more robust
       switch (pinIndex) {
         case 0:
           return this.state.pins[0];
