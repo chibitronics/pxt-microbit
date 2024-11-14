@@ -74,8 +74,8 @@ const TOGGLES_GAP = 20;
 const TOGGLE_HEIGHT = RECT_WIDTH;
 const TOGGLE_WIDTH = RECT_WIDTH;
 
-const POWER_PIN_INDEX = TOTAL_NUMBER_OF_PINS - 2;
-const GROUND_PIN_INDEX = TOTAL_NUMBER_OF_PINS - 1;
+const POWER_PIN_INDEX = NUMBER_OF_GPIO_PINS;
+const GROUND_PIN_INDEX = 0;
 
 enum ToggleValue {
   On,
@@ -111,6 +111,24 @@ namespace pxsim.visuals {
     return defsElement;
   }
 
+  function getTextXCoordinateForIndex(pinIndex: number, isGroundSwitch: boolean) {
+    if (isGroundSwitch) {
+      return TEXT_X_OFFSET + TEXT_X_DISTANCE * (pinIndex);
+    }
+    return TEXT_X_OFFSET + TEXT_X_DISTANCE * (pinIndex + 1);
+  }
+
+  function getCircleCoordinateForIndex(pinIndex: number) {
+    return CIRCLE_X_OFFSET + CIRCLE_X_DISTANCE * (pinIndex + 1);
+  }
+
+  function getRectangleXCoordinateForIndex(pinIndex: number, isGroundSwitch: boolean = false) {
+    if (isGroundSwitch) {
+      return RECT_X_OFFSET + RECT_X_DISTANCE * (pinIndex);
+    }
+    return RECT_X_OFFSET + RECT_X_DISTANCE * (pinIndex + 1);
+  }
+
   function generateSvg(): SVGAElement {
     const root = svg.parseString(
       `<svg xmlns="http://www.w3.org/2000/svg" width="${CLIP_WIDTH}" height="${CLIP_HEIGHT}"></svg>`
@@ -126,6 +144,16 @@ namespace pxsim.visuals {
     clipElement.setAttribute("height", `${CLIP_HEIGHT}`);
     clipElement.setAttribute("fill", "hsl(44.772, 100%, 61%)"); //chibiyellow
     group.append(clipElement);
+
+    const groundPin = createPinRectangle(
+      GROUND_PIN_INDEX,
+      "ground",
+      RECT_DEFAULT_FILL,
+      true
+    );
+    group.append(groundPin);
+    const groundLabel = createPinLabel(GROUND_PIN_INDEX, "-", true);
+    group.append(groundLabel);
 
     // Add gpio pins
     for (let i = 0; i < NUMBER_OF_GPIO_PINS; i++) {
@@ -163,15 +191,6 @@ namespace pxsim.visuals {
     const powerLabel = createPinLabel(POWER_PIN_INDEX, "+");
     group.append(powerLabel);
 
-    const groundPin = createPinRectangle(
-      GROUND_PIN_INDEX,
-      "ground",
-      RECT_DEFAULT_FILL
-    );
-    group.append(groundPin);
-    const groundLabel = createPinLabel(GROUND_PIN_INDEX, "-");
-    group.append(groundLabel);
-
     // Add toggles add/remove switches
     group.append(
       addToggles(SWITCH_TOGGLES_Y, SWITCH_GROUP_CLASS_NAME, "Add Switch")
@@ -186,11 +205,12 @@ namespace pxsim.visuals {
   function createPinRectangle(
     pinIndex: number,
     className: string,
-    fillColor: string
+    fillColor: string,
+    isGroundPin = false,
   ) {
     const pinRect = createSvgElement("rect");
     pinRect.classList.add(className);
-    pinRect.setAttribute("x", `${RECT_X_OFFSET + RECT_X_DISTANCE * pinIndex}`);
+    pinRect.setAttribute("x", `${getRectangleXCoordinateForIndex(pinIndex, isGroundPin)}`);
     pinRect.setAttribute("y", `${RECT_Y}`);
     pinRect.setAttribute("height", `${RECT_HEIGHT}`);
     pinRect.setAttribute("width", `${RECT_WIDTH}`);
@@ -198,12 +218,12 @@ namespace pxsim.visuals {
     return pinRect;
   }
 
-  function createPinLabel(pinIndex: number, text: string) {
+  function createPinLabel(pinIndex: number, text: string, isGround = false) {
     const labelText = createSvgElement("text");
     labelText.classList.add("pin-label");
     labelText.setAttribute(
       "x",
-      `${TEXT_X_OFFSET + TEXT_X_DISTANCE * pinIndex + RECT_WIDTH / 2 - 5}`
+      `${getTextXCoordinateForIndex(pinIndex, isGround) + RECT_WIDTH / 2 - 5}`
     );
     labelText.setAttribute("y", `${TEXT_Y}`);
     labelText.setAttribute("textAnchor", "middle");
@@ -215,7 +235,7 @@ namespace pxsim.visuals {
     const polygon = createSvgElement("polygon");
     polygon.classList.add(className);
     const xCenterPoint =
-      RECT_X_OFFSET + RECT_X_DISTANCE * pinIndex + RECT_WIDTH / 2;
+      getRectangleXCoordinateForIndex(pinIndex) + RECT_WIDTH / 2;
 
     const x1 = xCenterPoint - LIGHT_WIDTH / 2;
     const x2 = x1 + LIGHT_WIDTH;
@@ -238,7 +258,7 @@ namespace pxsim.visuals {
     levelCircle.classList.add(className);
     levelCircle.setAttribute(
       "cx",
-      `${CIRCLE_X_OFFSET + CIRCLE_X_DISTANCE * pinIndex}`
+      `${getCircleCoordinateForIndex(pinIndex)}`
     );
     levelCircle.setAttribute("cy", `${CIRCLE_Y}`);
     levelCircle.setAttribute("r", `${CIRCLE_RADIUS}`);
@@ -250,8 +270,7 @@ namespace pxsim.visuals {
     const group = createSvgElement("g");
     group.setAttribute("id", `${getWireIdName(i, SWITCH_GROUP_CLASS_NAME)}`);
 
-    const xOffset = RECT_X_OFFSET + RECT_WIDTH / 2;
-    const startingX = xOffset + RECT_X_DISTANCE * i;
+    const startingX = getRectangleXCoordinateForIndex(i) + RECT_WIDTH / 2;
     const bottomOfClipY = CLIP_HEIGHT;
 
     // Draw the initial line before the gap.
@@ -286,7 +305,7 @@ namespace pxsim.visuals {
     remainingLineD += `V ${CLIP_HEIGHT + SWITCH_WIRE_HEIGHT} `;
 
     // 2. Draw the horizontal stroke
-    const powerPinStartingX = xOffset + RECT_X_DISTANCE * POWER_PIN_INDEX;
+    const powerPinStartingX = getRectangleXCoordinateForIndex(POWER_PIN_INDEX) + RECT_WIDTH / 2;
     remainingLineD += `H ${powerPinStartingX} `;
 
     // 3. Draw the remaining vertical stroke
@@ -300,8 +319,7 @@ namespace pxsim.visuals {
   }
 
   function getDrawValueForSwitch(pinIndex: number, isConnected: boolean) {
-    const xOffset = RECT_X_OFFSET + RECT_WIDTH / 2;
-    const wireStartingX = xOffset + RECT_X_DISTANCE * pinIndex;
+    const wireStartingX = getRectangleXCoordinateForIndex(pinIndex) + RECT_WIDTH / 2;
     const wireStartingY = CLIP_HEIGHT + SWITCH_OFF_INITIAL_WIRE_HEIGHT;
 
     if (isConnected) {
@@ -344,7 +362,7 @@ namespace pxsim.visuals {
     const group = createSvgElement("g");
     group.setAttribute("id", `${getWireIdName(i, LIGHT_GROUP_CLASS_NAME)}`);
 
-    const startingX = RECT_X_OFFSET + RECT_X_DISTANCE * i + RECT_WIDTH / 2;
+    const startingX = getRectangleXCoordinateForIndex(i) + RECT_WIDTH / 2;
     const bottomOfClipY = RECT_Y + RECT_HEIGHT;
     const path = createSvgElement("path");
     path.classList.add(WIRE_CLASS_NAME);
