@@ -35,6 +35,9 @@ namespace pxsim.pins {
         let pin = getPin(pinId);
         if (!pin) return -1;
         pin.mode = PinFlags.Digital | PinFlags.Input;
+        if (pin.isExternalVoltageApplied) {
+            return 1;
+        }
         return pin.value > 100 ? 1 : 0;
     }
 
@@ -57,6 +60,9 @@ namespace pxsim.pins {
         let pin = getPin(pinId);
         if (!pin) return -1;
         pin.mode = PinFlags.Analog | PinFlags.Input;
+        if (pin.isExternalVoltageApplied) {
+            return PIN_MAX_VALUE;
+        }
         return pin.value || 0;
     }
 
