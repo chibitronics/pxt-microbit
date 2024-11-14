@@ -8,10 +8,10 @@ const CLIP_WIDTH = 420;
 const CLIP_HEIGHT = 120;
 
 const NUMBER_OF_GPIO_PINS = 6;
-const TOTAL_NUMBER_OF_PINS = NUMBER_OF_GPIO_PINS + 2; // GPIO + power + ground
+const TOTAL_NUMBER_OF_PINS = NUMBER_OF_GPIO_PINS + 3; // GPIO + power + 2 grounds
 
 const ITEM_WIDTH = 30;
-const GAP = 20;
+const GAP = 15;
 const SPACING = ITEM_WIDTH + GAP;
 const ALL_ITEMS_WIDTH =
   TOTAL_NUMBER_OF_PINS * ITEM_WIDTH + GAP * (TOTAL_NUMBER_OF_PINS - 1);
@@ -73,9 +73,11 @@ const LIGHT_Y = CLIP_HEIGHT + SWITCH_OFF_INITIAL_WIRE_HEIGHT;
 const TOGGLES_GAP = 20;
 const TOGGLE_HEIGHT = RECT_WIDTH;
 const TOGGLE_WIDTH = RECT_WIDTH;
+const TOGGLES_X_DISTANCE = TOGGLE_WIDTH + TOGGLES_GAP;
 
 const POWER_PIN_INDEX = NUMBER_OF_GPIO_PINS;
-const GROUND_PIN_INDEX = 0;
+const LEFT_GROUND_PIN_INDEX = 0;
+const RIGHT_GROUND_PIN_INDEX = NUMBER_OF_GPIO_PINS + 1;
 
 enum ToggleValue {
   On,
@@ -145,15 +147,15 @@ namespace pxsim.visuals {
     clipElement.setAttribute("fill", "hsl(44.772, 100%, 61%)"); //chibiyellow
     group.append(clipElement);
 
-    const groundPin = createPinRectangle(
-      GROUND_PIN_INDEX,
+    const leftGroundPin = createPinRectangle(
+      LEFT_GROUND_PIN_INDEX,
       "ground",
       RECT_DEFAULT_FILL,
       true
     );
-    group.append(groundPin);
-    const groundLabel = createPinLabel(GROUND_PIN_INDEX, "-", true);
-    group.append(groundLabel);
+    group.append(leftGroundPin);
+    const leftGroundPinLabel = createPinLabel(LEFT_GROUND_PIN_INDEX, "-", true);
+    group.append(leftGroundPinLabel);
 
     // Add gpio pins
     for (let i = 0; i < NUMBER_OF_GPIO_PINS; i++) {
@@ -191,6 +193,15 @@ namespace pxsim.visuals {
     const powerLabel = createPinLabel(POWER_PIN_INDEX, "+");
     group.append(powerLabel);
 
+    const rightGroundPin = createPinRectangle(
+      RIGHT_GROUND_PIN_INDEX,
+      "ground",
+      RECT_DEFAULT_FILL
+    );
+    group.append(rightGroundPin);
+    const rightGroundPinLabel = createPinLabel(RIGHT_GROUND_PIN_INDEX, "-");
+    group.append(rightGroundPinLabel);
+
     // Add toggles add/remove switches
     group.append(
       addToggles(SWITCH_TOGGLES_Y, SWITCH_GROUP_CLASS_NAME, "Add Switch")
@@ -206,11 +217,11 @@ namespace pxsim.visuals {
     pinIndex: number,
     className: string,
     fillColor: string,
-    isGroundPin = false,
+    isLeftGroundPin = false,
   ) {
     const pinRect = createSvgElement("rect");
     pinRect.classList.add(className);
-    pinRect.setAttribute("x", `${getRectangleXCoordinateForIndex(pinIndex, isGroundPin)}`);
+    pinRect.setAttribute("x", `${getRectangleXCoordinateForIndex(pinIndex, isLeftGroundPin)}`);
     pinRect.setAttribute("y", `${RECT_Y}`);
     pinRect.setAttribute("height", `${RECT_HEIGHT}`);
     pinRect.setAttribute("width", `${RECT_WIDTH}`);
@@ -369,7 +380,7 @@ namespace pxsim.visuals {
 
     const x1 = startingX;
     const y1 = bottomOfClipY;
-    const lengthOfWire = RECT_X_DISTANCE * GROUND_PIN_INDEX;
+    const lengthOfWire = RECT_X_DISTANCE * LEFT_GROUND_PIN_INDEX;
     const endWireX = RECT_X_OFFSET + RECT_WIDTH / 2 + lengthOfWire;
 
     let d = "";
@@ -448,7 +459,7 @@ namespace pxsim.visuals {
     const pinRect = createSvgElement("rect");
     pinRect.classList.add("toggle");
     pinRect.setAttribute(PIN_INDEX_DATA_NAME, `${pinIndex}`);
-    pinRect.setAttribute("x", `${(TOGGLE_WIDTH + TOGGLES_GAP) * pinIndex}`);
+    pinRect.setAttribute("x", `${(TOGGLES_X_DISTANCE) * pinIndex}`);
     pinRect.setAttribute("y", `${overallYOffset + TOGGLES_GAP}`);
     pinRect.setAttribute("height", `${TOGGLE_HEIGHT}`);
     pinRect.setAttribute("width", `${TOGGLE_WIDTH}`);
@@ -457,7 +468,7 @@ namespace pxsim.visuals {
     const labelText = createSvgElement("text");
     labelText.setAttribute(
       "x",
-      `${RECT_X_DISTANCE * pinIndex + TOGGLE_WIDTH / 2 - 3}`
+      `${TOGGLES_X_DISTANCE * pinIndex + TOGGLE_WIDTH / 2 - 3}`
     );
     labelText.setAttribute(
       "y",
