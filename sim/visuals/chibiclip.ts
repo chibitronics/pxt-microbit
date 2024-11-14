@@ -267,7 +267,11 @@ namespace pxsim.visuals {
     const switchWireD = getDrawValueForSwitch(i, false);
     clickableSwitchWire.setAttribute("d", switchWireD);
     clickableSwitchWire.setAttribute(PIN_INDEX_DATA_NAME, `${i}`);
-    clickableSwitchWire.classList.add(WIRE_CLASS_NAME, CLICKABLE_SWITCH_CLASS_NAME, "off");
+    clickableSwitchWire.classList.add(
+      WIRE_CLASS_NAME,
+      CLICKABLE_SWITCH_CLASS_NAME,
+      "off"
+    );
     group.append(clickableSwitchWire);
 
     // Draw the remaining line.
@@ -540,8 +544,10 @@ namespace pxsim.visuals {
       for (const toggle of switchToggles) {
         toggle.addEventListener("click", () => {
           const toggleBody = toggle.querySelector(`.toggle`);
-          const pinIndex = parseInt(toggleBody.getAttribute(PIN_INDEX_DATA_NAME));
-          const pin = this.state.pins[pinIndex];
+          const pinIndex = parseInt(
+            toggleBody.getAttribute(PIN_INDEX_DATA_NAME)
+          );
+          const pin = this.getPinFromIndexNumber(pinIndex);
           const toggleValue = this.getToggleValue(
             pinIndex,
             SWITCH_GROUP_CLASS_NAME
@@ -569,7 +575,7 @@ namespace pxsim.visuals {
         toggle.addEventListener("click", () => {
           const toggleBody = toggle.querySelector(`.toggle`);
           const pinIndex = parseInt(toggleBody.getAttribute("data-pin-index"));
-          const pin = this.state.pins[pinIndex];
+          const pin = this.getPinFromIndexNumber(pinIndex);
           const toggleValue = this.getToggleValue(
             pinIndex,
             LIGHT_GROUP_CLASS_NAME
@@ -606,7 +612,7 @@ namespace pxsim.visuals {
         const pinIndex = parseInt(
           clickableSwitchEl.getAttribute(PIN_INDEX_DATA_NAME)
         );
-        const pin = this.state.pins[pinIndex];
+        const pin = this.getPinFromIndexNumber(pinIndex);
         if (this.isSwitchConnected(pinIndex)) {
           this.setSwitchIsConnected(pinIndex, false);
           pin.digitalWritePin(0);
@@ -728,13 +734,19 @@ namespace pxsim.visuals {
 
     private getClickableSwitchElement(pinIndex: number) {
       return this.element.querySelector(
-        `#${getWireIdName(pinIndex, SWITCH_GROUP_CLASS_NAME)} .${CLICKABLE_SWITCH_CLASS_NAME}`
+        `#${getWireIdName(
+          pinIndex,
+          SWITCH_GROUP_CLASS_NAME
+        )} .${CLICKABLE_SWITCH_CLASS_NAME}`
       );
     }
 
     private setSwitchIsConnected(pinIndex: number, isConnected: boolean) {
       const clickableSwitchEl = this.getClickableSwitchElement(pinIndex);
-      clickableSwitchEl.setAttribute("d", getDrawValueForSwitch(pinIndex, isConnected));
+      clickableSwitchEl.setAttribute(
+        "d",
+        getDrawValueForSwitch(pinIndex, isConnected)
+      );
       if (isConnected) {
         clickableSwitchEl.classList.add("on");
         clickableSwitchEl.classList.remove("off");
@@ -800,7 +812,7 @@ namespace pxsim.visuals {
         if (!pinLoaded) {
           return;
         }
-        const pin = this.state.pins[i];
+        const pin = this.getPinFromIndexNumber(i);
         this.resetPin(i);
 
         const isAnalog = pin.lastWriteMode === WriteMode.Analog;
@@ -828,7 +840,7 @@ namespace pxsim.visuals {
     }
 
     private setDigitalDisplay(index: number) {
-      const pin = this.state.pins[index];
+      const pin = this.getPinFromIndexNumber(index);
       const isOn = pin.value > 0;
 
       const pinFillEl = this.element.querySelector(`#pin${index} rect.level`);
@@ -855,7 +867,7 @@ namespace pxsim.visuals {
     }
 
     private setAnalogDisplay(index: number) {
-      const pin = this.state.pins[index];
+      const pin = this.getPinFromIndexNumber(index);
       const percentFraction = pin.value / ANALOG_PIN_MAX_VALUE;
 
       const pinFillEl = this.element.querySelector(`#pin${index} rect.level`);
@@ -893,5 +905,32 @@ namespace pxsim.visuals {
     }
 
     public updateTheme(): void {}
+
+    private getPinFromIndexNumber(pinIndex: number): Pin {
+      // NOTE!!!!!
+      // The Chibi Clip pin mappings are:
+      // 0 - Pin 0
+      // 1 - Pin 1
+      // 2 - Pin 2
+      // 3 - Pin 13
+      // 4 - Pin 14
+      // 5 - Pin 15
+      switch (pinIndex) {
+        case 0:
+          return this.state.pins[0];
+        case 1:
+          return this.state.pins[1];
+        case 2:
+          return this.state.pins[2];
+        case 3:
+          return this.state.pins[13];
+        case 4:
+          return this.state.pins[14];
+        case 5:
+          return this.state.pins[15];
+        default:
+          throw `not a valid index: ${pinIndex}`;
+      }
+    }
   }
 }

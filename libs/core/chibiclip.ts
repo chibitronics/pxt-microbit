@@ -301,20 +301,30 @@ namespace ChibiClip {
   }
 }
 
-function stringToDigitalPin(pinInput: DigitalPinBlockParameter): DigitalPin {
-  switch (pinInput) {
-    case "D0":
-      return DigitalPin.P0;
-    case "D1":
-      return DigitalPin.P1;
-    case "D2":
-      return DigitalPin.P2;
-    case "D3":
-      return DigitalPin.P3;
-    case "D4":
-      return DigitalPin.P4;
-    case "D5":
-      return DigitalPin.P5;
+// NOTE!!!!!
+// The Chibi Clip pin mappings are:
+// 0 - Pin 0
+// 1 - Pin 1
+// 2 - Pin 2
+// 3 - Pin 13
+// 4 - Pin 14
+// 5 - Pin 15
+function indexToAnalogPin(pinIndex: number): AnalogPin {
+  switch (pinIndex) {
+    case 0:
+      return AnalogPin.P0;
+    case 1:
+      return AnalogPin.P1;
+    case 2:
+      return AnalogPin.P2;
+    case 3:
+      return AnalogPin.P13;
+    case 4:
+      return AnalogPin.P14;
+    case 5:
+      return AnalogPin.P15;
+    default:
+      throw `not a valid index: ${pinIndex}`;
   }
 }
 
@@ -327,31 +337,24 @@ function indexToDigitalPin(pinIndex: number): DigitalPin {
     case 2:
       return DigitalPin.P2;
     case 3:
-      return DigitalPin.P3;
+      return DigitalPin.P13;
     case 4:
-      return DigitalPin.P4;
+      return DigitalPin.P14;
     case 5:
-      return DigitalPin.P5;
+      return DigitalPin.P15;
     default:
       throw `not a valid index: ${pinIndex}`;
   }
 }
 
 function stringToAnalogPin(pinInput: AnalogPinBlockParameter): AnalogPin {
-  switch (pinInput) {
-    case "A0":
-      return AnalogPin.P0;
-    case "A1":
-      return AnalogPin.P1;
-    case "A2":
-      return AnalogPin.P2;
-    case "A3":
-      return AnalogPin.P3;
-    case "A4":
-      return AnalogPin.P4;
-    case "A5":
-      return AnalogPin.P5;
-  }
+  const index = stringToPinNumber(pinInput);
+  return indexToAnalogPin(index);
+}
+
+function stringToDigitalPin(pinInput: DigitalPinBlockParameter): DigitalPin {
+  const index = stringToPinNumber(pinInput);
+  return indexToDigitalPin(index);
 }
 
 function stringToPinNumber(pinInput: string): number {
