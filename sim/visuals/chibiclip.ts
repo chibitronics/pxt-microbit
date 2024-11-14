@@ -76,13 +76,68 @@ const TOGGLE_WIDTH = RECT_WIDTH;
 const TOGGLES_X_DISTANCE = TOGGLE_WIDTH + TOGGLES_GAP;
 
 const POWER_PIN_INDEX = NUMBER_OF_GPIO_PINS;
-const LEFT_GROUND_PIN_INDEX = 0;
-const RIGHT_GROUND_PIN_INDEX = NUMBER_OF_GPIO_PINS + 1;
 
 enum ToggleValue {
   On,
   OffAndEnabled,
   OffAndDisabled,
+}
+
+// NOTE: These values are meaningful, and represent the Position Number of the pin 
+// in the clip. I made them a string type because it's REALLY easy to get off by
+// one bugs by mixing up the Pin Number and the Position Number, and so having
+// a string type will force a compiler error when that mistake happens.
+enum VisualizerPin {
+  LeftGround = "Left Ground",
+  Pin0 = "Pin 0",
+  Pin1 = "Pin 1",
+  Pin2 = "Pin 2",
+  Pin3 = "Pin 3",
+  Pin4 = "Pin 4",
+  Pin5 = "Pin 5",
+  ThreeVolt = "Voltage",
+  RightGround = "Right Ground",
+}
+
+function visualizerPinToPositionNumber(visualizerPin: VisualizerPin) {
+  switch(visualizerPin) {
+    case VisualizerPin.LeftGround:
+      return 0;
+    case VisualizerPin.Pin0:
+      return 1;
+    case VisualizerPin.Pin1:
+      return 2;
+    case VisualizerPin.Pin2:
+      return 3;
+    case VisualizerPin.Pin3:
+      return 4;
+    case VisualizerPin.Pin4:
+      return 5;
+    case VisualizerPin.Pin5:
+      return 6;
+    case VisualizerPin.ThreeVolt:
+      return 7;
+    case VisualizerPin.RightGround:
+      return 8;
+  }
+}
+
+function gpioPinNumberToVisalizerPin(pinNumber: number) {
+  switch (pinNumber) {
+    case 0:
+      return VisualizerPin.Pin0;
+    case 1:
+      return VisualizerPin.Pin1;
+    case 2:
+      return VisualizerPin.Pin2;
+    case 3:
+      return VisualizerPin.Pin3;
+    case 4:
+      return VisualizerPin.Pin4;
+    case 5:
+      return VisualizerPin.Pin5;
+  }
+  throw `invalid pin ${pinNumber}`;
 }
 
 namespace pxsim.visuals {
@@ -113,22 +168,19 @@ namespace pxsim.visuals {
     return defsElement;
   }
 
-  function getTextXCoordinateForIndex(pinIndex: number, isGroundSwitch: boolean) {
-    if (isGroundSwitch) {
-      return TEXT_X_OFFSET + TEXT_X_DISTANCE * (pinIndex);
-    }
-    return TEXT_X_OFFSET + TEXT_X_DISTANCE * (pinIndex + 1);
+  function getTextXCoordinateForPin(visualizerPin: VisualizerPin) {
+    const positionNumber = visualizerPinToPositionNumber(visualizerPin);
+    return TEXT_X_OFFSET + TEXT_X_DISTANCE * (positionNumber);
   }
 
-  function getCircleCoordinateForIndex(pinIndex: number) {
-    return CIRCLE_X_OFFSET + CIRCLE_X_DISTANCE * (pinIndex + 1);
+  function getCircleCoordinateForPin(visualizerPin: VisualizerPin) {
+    const positionNumber = visualizerPinToPositionNumber(visualizerPin);
+    return CIRCLE_X_OFFSET + CIRCLE_X_DISTANCE * (positionNumber);
   }
 
-  function getRectangleXCoordinateForIndex(pinIndex: number, isGroundSwitch: boolean = false) {
-    if (isGroundSwitch) {
-      return RECT_X_OFFSET + RECT_X_DISTANCE * (pinIndex);
-    }
-    return RECT_X_OFFSET + RECT_X_DISTANCE * (pinIndex + 1);
+  function getRectangleXCoordinateForPin(visualizerPin: VisualizerPin) {
+    const positionNumber = visualizerPinToPositionNumber(visualizerPin);
+    return RECT_X_OFFSET + RECT_X_DISTANCE * (positionNumber);
   }
 
   function generateSvg(): SVGAElement {
@@ -148,58 +200,58 @@ namespace pxsim.visuals {
     group.append(clipElement);
 
     const leftGroundPin = createPinRectangle(
-      LEFT_GROUND_PIN_INDEX,
+      VisualizerPin.LeftGround,
       "ground",
-      RECT_DEFAULT_FILL,
-      true
+      RECT_DEFAULT_FILL
     );
     group.append(leftGroundPin);
-    const leftGroundPinLabel = createPinLabel(LEFT_GROUND_PIN_INDEX, "-", true);
+    const leftGroundPinLabel = createPinLabel(VisualizerPin.LeftGround, "-", true);
     group.append(leftGroundPinLabel);
 
     // Add gpio pins
     for (let i = 0; i < NUMBER_OF_GPIO_PINS; i++) {
+      const visualizerPin = gpioPinNumberToVisalizerPin(i);
       const pinGroup = createSvgElement("g");
       pinGroup.setAttribute("id", `pin${i}`);
       group.append(pinGroup);
 
       const defaultCircle = createLightCircle(
-        i,
+        visualizerPin,
         "default",
         CIRCLE_DEFAULT_FILL
       );
       pinGroup.append(defaultCircle);
 
-      const levelCircle = createLightCircle(i, "level", "transparent");
+      const levelCircle = createLightCircle(visualizerPin, "level", "transparent");
       pinGroup.append(levelCircle);
 
-      const defaultRect = createPinRectangle(i, "default", RECT_DEFAULT_FILL);
+      const defaultRect = createPinRectangle(visualizerPin, "default", RECT_DEFAULT_FILL);
       pinGroup.append(defaultRect);
 
-      const levelRect = createPinRectangle(i, "level", "transparent");
+      const levelRect = createPinRectangle(visualizerPin, "level", "transparent");
       pinGroup.append(levelRect);
 
-      const label = createPinLabel(i, `${i}`);
+      const label = createPinLabel(visualizerPin, `${i}`);
       pinGroup.append(label);
     }
 
     // Add power & ground pins
     const powerPin = createPinRectangle(
-      POWER_PIN_INDEX,
+      VisualizerPin.ThreeVolt,
       "power",
       RECT_DEFAULT_FILL
     );
     group.append(powerPin);
-    const powerLabel = createPinLabel(POWER_PIN_INDEX, "+");
+    const powerLabel = createPinLabel(VisualizerPin.ThreeVolt, "+");
     group.append(powerLabel);
 
     const rightGroundPin = createPinRectangle(
-      RIGHT_GROUND_PIN_INDEX,
+      VisualizerPin.RightGround,
       "ground",
       RECT_DEFAULT_FILL
     );
     group.append(rightGroundPin);
-    const rightGroundPinLabel = createPinLabel(RIGHT_GROUND_PIN_INDEX, "-");
+    const rightGroundPinLabel = createPinLabel(VisualizerPin.RightGround, "-");
     group.append(rightGroundPinLabel);
 
     // Add toggles add/remove switches
@@ -214,14 +266,13 @@ namespace pxsim.visuals {
   }
 
   function createPinRectangle(
-    pinIndex: number,
+    visualizerPin: VisualizerPin,
     className: string,
-    fillColor: string,
-    isLeftGroundPin = false,
+    fillColor: string
   ) {
     const pinRect = createSvgElement("rect");
     pinRect.classList.add(className);
-    pinRect.setAttribute("x", `${getRectangleXCoordinateForIndex(pinIndex, isLeftGroundPin)}`);
+    pinRect.setAttribute("x", `${getRectangleXCoordinateForPin(visualizerPin)}`);
     pinRect.setAttribute("y", `${RECT_Y}`);
     pinRect.setAttribute("height", `${RECT_HEIGHT}`);
     pinRect.setAttribute("width", `${RECT_WIDTH}`);
@@ -229,12 +280,12 @@ namespace pxsim.visuals {
     return pinRect;
   }
 
-  function createPinLabel(pinIndex: number, text: string, isGround = false) {
+  function createPinLabel(visualizerPin: VisualizerPin, text: string, isGround = false) {
     const labelText = createSvgElement("text");
     labelText.classList.add("pin-label");
     labelText.setAttribute(
       "x",
-      `${getTextXCoordinateForIndex(pinIndex, isGround) + RECT_WIDTH / 2 - 5}`
+      `${getTextXCoordinateForPin(visualizerPin) + RECT_WIDTH / 2 - 5}`
     );
     labelText.setAttribute("y", `${TEXT_Y}`);
     labelText.setAttribute("textAnchor", "middle");
@@ -242,11 +293,11 @@ namespace pxsim.visuals {
     return labelText;
   }
 
-  function createLightTriangle(pinIndex: number, className: string) {
+  function createLightTriangle(visualizerPin: VisualizerPin, className: string) {
     const polygon = createSvgElement("polygon");
     polygon.classList.add(className);
     const xCenterPoint =
-      getRectangleXCoordinateForIndex(pinIndex) + RECT_WIDTH / 2;
+      getRectangleXCoordinateForPin(visualizerPin) + RECT_WIDTH / 2;
 
     const x1 = xCenterPoint - LIGHT_WIDTH / 2;
     const x2 = x1 + LIGHT_WIDTH;
@@ -261,7 +312,7 @@ namespace pxsim.visuals {
   }
 
   function createLightCircle(
-    pinIndex: number,
+    visualizerPin: VisualizerPin,
     className: string,
     fillColor: string
   ) {
@@ -269,7 +320,7 @@ namespace pxsim.visuals {
     levelCircle.classList.add(className);
     levelCircle.setAttribute(
       "cx",
-      `${getCircleCoordinateForIndex(pinIndex)}`
+      `${getCircleCoordinateForPin(visualizerPin)}`
     );
     levelCircle.setAttribute("cy", `${CIRCLE_Y}`);
     levelCircle.setAttribute("r", `${CIRCLE_RADIUS}`);
@@ -277,11 +328,12 @@ namespace pxsim.visuals {
     return levelCircle;
   }
 
-  function createSwitchFromPinToVoltage(i: number) {
+  function createSwitchFromPinToVoltage(pinNumber: number) {
     const group = createSvgElement("g");
-    group.setAttribute("id", `${getWireIdName(i, SWITCH_GROUP_CLASS_NAME)}`);
+    group.setAttribute("id", `${getWireIdName(pinNumber, SWITCH_GROUP_CLASS_NAME)}`);
+    const visualizerPin = gpioPinNumberToVisalizerPin(pinNumber);
 
-    const startingX = getRectangleXCoordinateForIndex(i) + RECT_WIDTH / 2;
+    const startingX = getRectangleXCoordinateForPin(visualizerPin) + RECT_WIDTH / 2;
     const bottomOfClipY = CLIP_HEIGHT;
 
     // Draw the initial line before the gap.
@@ -294,9 +346,9 @@ namespace pxsim.visuals {
 
     // Draw the switch in the off state
     const clickableSwitchWire = createSvgElement("path");
-    const switchWireD = getDrawValueForSwitch(i, false);
+    const switchWireD = getDrawValueForSwitch(pinNumber, false);
     clickableSwitchWire.setAttribute("d", switchWireD);
-    clickableSwitchWire.setAttribute(PIN_INDEX_DATA_NAME, `${i}`);
+    clickableSwitchWire.setAttribute(PIN_INDEX_DATA_NAME, `${pinNumber}`);
     clickableSwitchWire.classList.add(
       WIRE_CLASS_NAME,
       CLICKABLE_SWITCH_CLASS_NAME,
@@ -316,7 +368,7 @@ namespace pxsim.visuals {
     remainingLineD += `V ${CLIP_HEIGHT + SWITCH_WIRE_HEIGHT} `;
 
     // 2. Draw the horizontal stroke
-    const powerPinStartingX = getRectangleXCoordinateForIndex(POWER_PIN_INDEX) + RECT_WIDTH / 2;
+    const powerPinStartingX = getRectangleXCoordinateForPin(VisualizerPin.ThreeVolt) + RECT_WIDTH / 2;
     remainingLineD += `H ${powerPinStartingX} `;
 
     // 3. Draw the remaining vertical stroke
@@ -329,8 +381,9 @@ namespace pxsim.visuals {
     return group;
   }
 
-  function getDrawValueForSwitch(pinIndex: number, isConnected: boolean) {
-    const wireStartingX = getRectangleXCoordinateForIndex(pinIndex) + RECT_WIDTH / 2;
+  function getDrawValueForSwitch(pinNumber: number, isConnected: boolean) {
+    const visualizerPin = gpioPinNumberToVisalizerPin(pinNumber);
+    const wireStartingX = getRectangleXCoordinateForPin(visualizerPin) + RECT_WIDTH / 2;
     const wireStartingY = CLIP_HEIGHT + SWITCH_OFF_INITIAL_WIRE_HEIGHT;
 
     if (isConnected) {
@@ -369,18 +422,20 @@ namespace pxsim.visuals {
     return angle * (Math.PI / 180);
   }
 
-  function createLightFromPinToGround(i: number, hasJump: boolean) {
+  function createLightFromPinToGround(pinNumber: number, hasJump: boolean) {
+    const visualizerPin = gpioPinNumberToVisalizerPin(pinNumber);
     const group = createSvgElement("g");
-    group.setAttribute("id", `${getWireIdName(i, LIGHT_GROUP_CLASS_NAME)}`);
+    group.setAttribute("id", `${getWireIdName(pinNumber, LIGHT_GROUP_CLASS_NAME)}`);
 
-    const startingX = getRectangleXCoordinateForIndex(i) + RECT_WIDTH / 2;
+    const startingX = getRectangleXCoordinateForPin(visualizerPin) + RECT_WIDTH / 2;
     const bottomOfClipY = RECT_Y + RECT_HEIGHT;
     const path = createSvgElement("path");
     path.classList.add(WIRE_CLASS_NAME);
 
     const x1 = startingX;
     const y1 = bottomOfClipY;
-    const lengthOfWire = RECT_X_DISTANCE * LEFT_GROUND_PIN_INDEX;
+    const leftGroundPositionNumber = visualizerPinToPositionNumber(VisualizerPin.LeftGround);
+    const lengthOfWire = RECT_X_DISTANCE * leftGroundPositionNumber;
     const endWireX = RECT_X_OFFSET + RECT_WIDTH / 2 + lengthOfWire;
 
     let d = "";
@@ -402,12 +457,12 @@ namespace pxsim.visuals {
     group.append(path);
 
     const lightGroup = createSvgElement("g");
-    lightGroup.id = getLightIdName(i);
+    lightGroup.id = getLightIdName(pinNumber);
 
-    const lightGraphicBottom = createLightTriangle(i, "triangle-base");
+    const lightGraphicBottom = createLightTriangle(visualizerPin, "triangle-base");
     lightGroup.append(lightGraphicBottom);
 
-    const lightGraphicTop = createLightTriangle(i, "triangle-light");
+    const lightGraphicTop = createLightTriangle(visualizerPin, "triangle-light");
     lightGraphicTop.setAttribute("fill", "transparent");
     lightGraphicTop.classList.add("off");
     lightGroup.append(lightGraphicTop);
@@ -436,30 +491,30 @@ namespace pxsim.visuals {
     return group;
   }
 
-  function getToggleIdName(pinIndex: number, groupClassName: string) {
-    return `${groupClassName}-pin-${pinIndex}`;
+  function getToggleIdName(pinNumber: number, groupClassName: string) {
+    return `${groupClassName}-pin-${pinNumber}`;
   }
 
-  function getWireIdName(pinIndex: number, groupClassName: string) {
-    return `${groupClassName}-wire-${pinIndex}`;
+  function getWireIdName(pinNumber: number, groupClassName: string) {
+    return `${groupClassName}-wire-${pinNumber}`;
   }
 
-  function getLightIdName(pinIndex: number) {
-    return `${LIGHT_GROUP_CLASS_NAME}-light-${pinIndex}`;
+  function getLightIdName(pinNumber: number) {
+    return `${LIGHT_GROUP_CLASS_NAME}-light-${pinNumber}`;
   }
 
   function createToggle(
-    pinIndex: number,
+    pinNumber: number,
     groupClassName: string,
     overallYOffset: number
   ) {
     const group = createSvgElement("g");
-    group.id = getToggleIdName(pinIndex, groupClassName);
+    group.id = getToggleIdName(pinNumber, groupClassName);
     group.classList.add("toggle-group");
     const pinRect = createSvgElement("rect");
     pinRect.classList.add("toggle");
-    pinRect.setAttribute(PIN_INDEX_DATA_NAME, `${pinIndex}`);
-    pinRect.setAttribute("x", `${(TOGGLES_X_DISTANCE) * pinIndex}`);
+    pinRect.setAttribute(PIN_INDEX_DATA_NAME, `${pinNumber}`);
+    pinRect.setAttribute("x", `${(TOGGLES_X_DISTANCE) * pinNumber}`);
     pinRect.setAttribute("y", `${overallYOffset + TOGGLES_GAP}`);
     pinRect.setAttribute("height", `${TOGGLE_HEIGHT}`);
     pinRect.setAttribute("width", `${TOGGLE_WIDTH}`);
@@ -468,14 +523,14 @@ namespace pxsim.visuals {
     const labelText = createSvgElement("text");
     labelText.setAttribute(
       "x",
-      `${TOGGLES_X_DISTANCE * pinIndex + TOGGLE_WIDTH / 2 - 3}`
+      `${TOGGLES_X_DISTANCE * pinNumber + TOGGLE_WIDTH / 2 - 3}`
     );
     labelText.setAttribute(
       "y",
       `${overallYOffset + TOGGLES_GAP + TOGGLE_HEIGHT / 2 + 4}`
     );
     labelText.setAttribute("textAnchor", "middle");
-    labelText.innerHTML = `${pinIndex}`;
+    labelText.innerHTML = `${pinNumber}`;
     group.append(pinRect);
     group.append(labelText);
 
@@ -573,22 +628,22 @@ namespace pxsim.visuals {
       for (const toggle of switchToggles) {
         toggle.addEventListener("click", () => {
           const toggleBody = toggle.querySelector(`.toggle`);
-          const pinIndex = parseInt(
+          const pinNumber = parseInt(
             toggleBody.getAttribute(PIN_INDEX_DATA_NAME)
           );
-          const pin = this.getPinFromIndexNumber(pinIndex);
+          const pin = this.getPinFromIndexNumber(pinNumber);
           const toggleValue = this.getToggleValue(
-            pinIndex,
+            pinNumber,
             SWITCH_GROUP_CLASS_NAME
           );
           switch (toggleValue) {
             case ToggleValue.On:
-              this.removeSwitchCircuit(pinIndex, pin);
-              this.enableLightToggle(pinIndex);
+              this.removeSwitchCircuit(pinNumber, pin);
+              this.enableLightToggle(pinNumber);
               break;
             case ToggleValue.OffAndEnabled:
-              this.addSwitchCircuit(pinIndex);
-              this.disableLightToggle(pinIndex);
+              this.addSwitchCircuit(pinNumber);
+              this.disableLightToggle(pinNumber);
               break;
             case ToggleValue.OffAndDisabled:
               break; // do nothing
@@ -603,20 +658,20 @@ namespace pxsim.visuals {
       for (const toggle of lightToggles) {
         toggle.addEventListener("click", () => {
           const toggleBody = toggle.querySelector(`.toggle`);
-          const pinIndex = parseInt(toggleBody.getAttribute("data-pin-index"));
-          const pin = this.getPinFromIndexNumber(pinIndex);
+          const pinNumber = parseInt(toggleBody.getAttribute("data-pin-index"));
+          const pin = this.getPinFromIndexNumber(pinNumber);
           const toggleValue = this.getToggleValue(
-            pinIndex,
+            pinNumber,
             LIGHT_GROUP_CLASS_NAME
           );
           switch (toggleValue) {
             case ToggleValue.On:
-              this.removeLightCircuit(pinIndex);
-              this.enableSwitchToggle(pinIndex);
+              this.removeLightCircuit(pinNumber);
+              this.enableSwitchToggle(pinNumber);
               break;
             case ToggleValue.OffAndEnabled:
-              this.addLightCircuit(pinIndex);
-              this.disableSwitchToggle(pinIndex, pin);
+              this.addLightCircuit(pinNumber);
+              this.disableSwitchToggle(pinNumber, pin);
               break;
             case ToggleValue.OffAndDisabled:
               break; // do nothing
@@ -625,17 +680,17 @@ namespace pxsim.visuals {
       }
     }
 
-    private addSwitchCircuit(pinIndex: number) {
-      this.setToggleValue(pinIndex, SWITCH_GROUP_CLASS_NAME, ToggleValue.On);
-      const wireEl = createSwitchFromPinToVoltage(pinIndex);
+    private addSwitchCircuit(pinNumber: number) {
+      this.setToggleValue(pinNumber, SWITCH_GROUP_CLASS_NAME, ToggleValue.On);
+      const wireEl = createSwitchFromPinToVoltage(pinNumber);
       this.part.el.append(wireEl);
-      this.addEventListenerForClickableSwitch(pinIndex);
+      this.addEventListenerForClickableSwitch(pinNumber);
 
-      this.redrawLightWiresIfNeeded(pinIndex);
+      this.redrawLightWiresIfNeeded(pinNumber);
     }
 
-    private addEventListenerForClickableSwitch(pinIndex: number) {
-      const clickableSwitchEl = this.getClickableSwitchElement(pinIndex);
+    private addEventListenerForClickableSwitch(pinNumber: number) {
+      const clickableSwitchEl = this.getClickableSwitchElement(pinNumber);
       // Set its event listener.
       clickableSwitchEl.addEventListener("click", () => {
         const pinIndex = parseInt(
@@ -652,43 +707,43 @@ namespace pxsim.visuals {
       });
     }
 
-    private removeCircuitElementsForSwitch(pinIndex: number) {
-      this.removeCircuit(pinIndex, SWITCH_GROUP_CLASS_NAME);
+    private removeCircuitElementsForSwitch(pinNumber: number) {
+      this.removeCircuit(pinNumber, SWITCH_GROUP_CLASS_NAME);
     }
 
-    private removeSwitchCircuit(pinIndex: number, pin: Pin) {
-      if (this.isSwitchConnected(pinIndex)) {
+    private removeSwitchCircuit(pinNumber: number, pin: Pin) {
+      if (this.isSwitchConnected(pinNumber)) {
         pin.removeExternalVoltage();
       }
 
       this.setToggleValue(
-        pinIndex,
+        pinNumber,
         SWITCH_GROUP_CLASS_NAME,
         ToggleValue.OffAndEnabled
       );
-      this.removeCircuitElementsForSwitch(pinIndex);
-      this.redrawLightWiresIfNeeded(pinIndex);
+      this.removeCircuitElementsForSwitch(pinNumber);
+      this.redrawLightWiresIfNeeded(pinNumber);
     }
 
-    private enableSwitchToggle(pinIndex: number) {
+    private enableSwitchToggle(pinNumber: number) {
       this.setToggleValue(
-        pinIndex,
+        pinNumber,
         SWITCH_GROUP_CLASS_NAME,
         ToggleValue.OffAndEnabled
       );
     }
 
-    private disableSwitchToggle(pinIndex: number, pin: Pin) {
+    private disableSwitchToggle(pinNumber: number, pin: Pin) {
       this.setToggleValue(
-        pinIndex,
+        pinNumber,
         SWITCH_GROUP_CLASS_NAME,
         ToggleValue.OffAndDisabled
       );
     }
 
-    private redrawLightWiresIfNeeded(switchCircuitPinIndex: number) {
+    private redrawLightWiresIfNeeded(switchCircuitPinNumber: number) {
       // If a pin after me has a light
-      for (let i = switchCircuitPinIndex + 1; i < NUMBER_OF_GPIO_PINS; i++) {
+      for (let i = switchCircuitPinNumber + 1; i < NUMBER_OF_GPIO_PINS; i++) {
         const value = this.getToggleValue(i, LIGHT_GROUP_CLASS_NAME);
         if (value === ToggleValue.On) {
           this.removeCircuitForLight(i);
@@ -697,9 +752,9 @@ namespace pxsim.visuals {
       }
     }
 
-    private lightWireHasJump(pinIndex: number) {
+    private lightWireHasJump(pinNumber: number) {
       // If a pin before it has a switch
-      for (let i = 0; i < pinIndex; i++) {
+      for (let i = 0; i < pinNumber; i++) {
         const value = this.getToggleValue(i, SWITCH_GROUP_CLASS_NAME);
         if (value === ToggleValue.On) {
           return true;
@@ -708,15 +763,15 @@ namespace pxsim.visuals {
       return false;
     }
 
-    private addLightCircuit(pinIndex: number) {
-      this.addCircuitElementsForLight(pinIndex);
-      this.setToggleValue(pinIndex, LIGHT_GROUP_CLASS_NAME, ToggleValue.On);
+    private addLightCircuit(pinNumber: number) {
+      this.addCircuitElementsForLight(pinNumber);
+      this.setToggleValue(pinNumber, LIGHT_GROUP_CLASS_NAME, ToggleValue.On);
     }
 
-    private addCircuitElementsForLight(pinIndex: number) {
+    private addCircuitElementsForLight(pinNumber: number) {
       const wireEl = createLightFromPinToGround(
-        pinIndex,
-        this.lightWireHasJump(pinIndex)
+        pinNumber,
+        this.lightWireHasJump(pinNumber)
       );
       this.part.el.append(wireEl);
 
@@ -724,61 +779,61 @@ namespace pxsim.visuals {
       this.updateState();
     }
 
-    private removeLightCircuit(pinIndex: number) {
+    private removeLightCircuit(pinNumber: number) {
       this.setToggleValue(
-        pinIndex,
+        pinNumber,
         LIGHT_GROUP_CLASS_NAME,
         ToggleValue.OffAndEnabled
       );
-      this.removeCircuitForLight(pinIndex);
+      this.removeCircuitForLight(pinNumber);
     }
 
-    private enableLightToggle(pinIndex: number) {
+    private enableLightToggle(pinNumber: number) {
       this.setToggleValue(
-        pinIndex,
+        pinNumber,
         LIGHT_GROUP_CLASS_NAME,
         ToggleValue.OffAndEnabled
       );
     }
 
-    private disableLightToggle(pinIndex: number) {
+    private disableLightToggle(pinNumber: number) {
       this.setToggleValue(
-        pinIndex,
+        pinNumber,
         LIGHT_GROUP_CLASS_NAME,
         ToggleValue.OffAndDisabled
       );
     }
 
-    private removeCircuitForLight(pinIndex: number) {
-      this.removeCircuit(pinIndex, LIGHT_GROUP_CLASS_NAME);
+    private removeCircuitForLight(pinNumber: number) {
+      this.removeCircuit(pinNumber, LIGHT_GROUP_CLASS_NAME);
     }
 
-    private removeCircuit(pinIndex: number, groupClassName: string) {
+    private removeCircuit(pinNumber: number, groupClassName: string) {
       const groupEl = this.element.querySelector(
-        `#${getWireIdName(pinIndex, groupClassName)}`
+        `#${getWireIdName(pinNumber, groupClassName)}`
       );
       groupEl.remove();
     }
 
-    private isSwitchConnected(pinIndex: number) {
-      const clickableSwitchEl = this.getClickableSwitchElement(pinIndex);
+    private isSwitchConnected(pinNumber: number) {
+      const clickableSwitchEl = this.getClickableSwitchElement(pinNumber);
       return clickableSwitchEl.classList.contains("on");
     }
 
-    private getClickableSwitchElement(pinIndex: number) {
+    private getClickableSwitchElement(pinNumber: number) {
       return this.element.querySelector(
         `#${getWireIdName(
-          pinIndex,
+          pinNumber,
           SWITCH_GROUP_CLASS_NAME
         )} .${CLICKABLE_SWITCH_CLASS_NAME}`
       );
     }
 
-    private setSwitchIsConnected(pinIndex: number, isConnected: boolean) {
-      const clickableSwitchEl = this.getClickableSwitchElement(pinIndex);
+    private setSwitchIsConnected(pinNumber: number, isConnected: boolean) {
+      const clickableSwitchEl = this.getClickableSwitchElement(pinNumber);
       clickableSwitchEl.setAttribute(
         "d",
-        getDrawValueForSwitch(pinIndex, isConnected)
+        getDrawValueForSwitch(pinNumber, isConnected)
       );
       if (isConnected) {
         clickableSwitchEl.classList.add("on");
@@ -789,9 +844,9 @@ namespace pxsim.visuals {
       }
     }
 
-    private getToggleValue(pinIndex: number, groupClassName: string) {
+    private getToggleValue(pinNumber: number, groupClassName: string) {
       const toggleGroup = this.element.querySelector(
-        `#${getToggleIdName(pinIndex, groupClassName)}`
+        `#${getToggleIdName(pinNumber, groupClassName)}`
       );
       if (toggleGroup.classList.contains("on")) {
         return ToggleValue.On;
@@ -803,12 +858,12 @@ namespace pxsim.visuals {
     }
 
     private setToggleValue(
-      pinIndex: number,
+      pinNumber: number,
       groupName: string,
       value: ToggleValue
     ) {
       const toggleGroup = this.element.querySelector(
-        `#${getToggleIdName(pinIndex, groupName)}`
+        `#${getToggleIdName(pinNumber, groupName)}`
       );
       switch (value) {
         case ToggleValue.On:
@@ -946,7 +1001,7 @@ namespace pxsim.visuals {
 
     public updateTheme(): void {}
 
-    private getPinFromIndexNumber(pinIndex: number): Pin {
+    private getPinFromIndexNumber(pinNumber: number): Pin {
       // NOTE!!!!!
       // The Chibi Clip pin mappings are:
       // 0 - Pin 0
@@ -957,7 +1012,7 @@ namespace pxsim.visuals {
       // 5 - Pin 15
       // This must maps the equivalent code in core/chibipclip.ts
       // TODO: make this more robust
-      switch (pinIndex) {
+      switch (pinNumber) {
         case 0:
           return this.state.pins[0];
         case 1:
@@ -971,7 +1026,7 @@ namespace pxsim.visuals {
         case 5:
           return this.state.pins[15];
         default:
-          throw `not a valid index: ${pinIndex}`;
+          throw `not a valid index: ${pinNumber}`;
       }
     }
   }
