@@ -245,6 +245,10 @@ namespace pxsim.visuals {
       addToggles(LIGHT_TOGGLES_Y, LIGHT_GROUP_CLASS_NAME, "Add Light")
     );
 
+    // Finally, black out pins 13, 14, 15 for now since they're buggy at the moment
+    const blackoutRect = createBlackoutRectangle(VisualizerPin.Pin3, VisualizerPin.Pin5);
+    group.append(blackoutRect);
+
     return root.firstElementChild as SVGAElement;
   }
 
@@ -313,6 +317,30 @@ namespace pxsim.visuals {
     pinRect.setAttribute("height", `${RECT_HEIGHT}`);
     pinRect.setAttribute("width", `${RECT_WIDTH}`);
     pinRect.setAttribute("fill", fillColor);
+    return pinRect;
+  }
+
+  function createBlackoutRectangle(
+    rectangleStart: VisualizerPin,
+    rectangleEnd: VisualizerPin,
+  ) {
+    const startPositionNumber = visualizerPinToPositionNumber(rectangleStart);
+    const endPositionNumber = visualizerPinToPositionNumber(rectangleEnd);
+    const numberItems = endPositionNumber - startPositionNumber + 1;
+    if (numberItems <= 0) {
+      throw `invalid range: ${rectangleStart} ${rectangleEnd}`;
+    }
+    const pinRect = createSvgElement("rect");
+    pinRect.classList.add("blackout");
+    pinRect.setAttribute(
+      "x",
+      `${getRectangleXCoordinateForPin(rectangleStart)}`
+    );
+    const width = RECT_WIDTH * numberItems + GAP * (numberItems - 1);
+    pinRect.setAttribute("y", `${RECT_Y}`);
+    pinRect.setAttribute("height", `${RECT_HEIGHT}`);
+    pinRect.setAttribute("width", `${width}`);
+    pinRect.setAttribute("fill", "black");
     return pinRect;
   }
 
