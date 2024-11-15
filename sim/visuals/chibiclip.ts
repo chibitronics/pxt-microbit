@@ -78,6 +78,7 @@ const TOGGLE_WIDTH = RECT_WIDTH;
 const TOGGLES_X_DISTANCE = TOGGLE_WIDTH + TOGGLES_GAP;
 
 const POWER_PIN_INDEX = NUMBER_OF_GPIO_PINS;
+const CHIBI_NEON_GREEN_COLOR = "hsl(112.5, 100%, 67%)";
 
 enum ToggleValue {
   On,
@@ -309,6 +310,15 @@ namespace pxsim.visuals {
     group.append(bottomLabelEl);
     const topLabelEl = createPinTopLabel(pin, topLabel);
     group.append(topLabelEl);
+
+    if (pin === VisualizerPin.ThreeVolt) {
+      const lightCircle = createLightCircle(
+        pin,
+        "voltage-on",
+        CHIBI_NEON_GREEN_COLOR
+      );
+      group.append(lightCircle);
+    }
     return group;
   }
 
@@ -661,6 +671,13 @@ namespace pxsim.visuals {
               font-family: "Arial";
               font-weight: bold;
               user-select: none;
+            }
+
+            .voltage-on {
+              stroke, rgb(235, 235, 235);
+              stroke-width: 3;
+              stroke-miterlimit: 10;
+              filter: url("#ledGlow");
             }
 
             .${CLICKABLE_SWITCH_CLASS_NAME},
@@ -1190,7 +1207,7 @@ namespace pxsim.visuals {
       );
 
       if (isOn) {
-        pinFillEl.setAttribute("fill", `hsl(112.5, 100%, 67%)`); //chibineongreen
+        pinFillEl.setAttribute("fill", CHIBI_NEON_GREEN_COLOR); //chibineongreen
         this.setLedOn(pinLedFillEl, 100);
         if (lightEl) {
           this.setLedOn(lightEl, 100);
@@ -1217,7 +1234,7 @@ namespace pxsim.visuals {
       );
 
       const fillHeight = RECT_HEIGHT * percentFraction;
-      pinFillEl.setAttribute("fill", "hsl(112.5, 100%, 67%)"); //chibineongreen
+      pinFillEl.setAttribute("fill", CHIBI_NEON_GREEN_COLOR); //chibineongreen
       pinFillEl.setAttribute("height", `${fillHeight}`);
       pinFillEl.setAttribute("y", `${RECT_Y + (RECT_HEIGHT - fillHeight)}`);
 
