@@ -80,6 +80,8 @@ const TOGGLES_X_DISTANCE = TOGGLE_WIDTH + TOGGLES_GAP;
 const POWER_PIN_INDEX = NUMBER_OF_GPIO_PINS;
 const CHIBI_NEON_GREEN_COLOR = "hsl(112.5, 100%, 67%)";
 
+const LOCAL_STORAGE_FIELD_NAME = "chibi-clip-persisted-state";
+
 enum ToggleValue {
   On,
   OffAndEnabled,
@@ -746,8 +748,11 @@ namespace pxsim.visuals {
       console.log("ChibiClipView constructed");
     }
 
-    private getLocalStorageTokenName() {
+    private getCurrentSessionId() {
       try {
+        // HACK: Grab the iframe's id as a way to uniquely identify the session, as it happens
+        // to stay constant while we're modifying the code, and changes on page refresh / page navigation,
+        // which is the behavior we want.
         const iframeIdentifier = window.frameElement.id;
         if (!iframeIdentifier) {
           return null;
@@ -760,16 +765,24 @@ namespace pxsim.visuals {
     }
 
     private loadToggleState() {
-      const tokenName = this.getLocalStorageTokenName();
-      if (!tokenName) {
+      const currentSessionId = this.getCurrentSessionId();
+      if (!currentSessionId) {
         return;
       }
-      const savedData = window.localStorage.getItem(tokenName);
+      const savedData = window.localStorage.getItem(LOCAL_STORAGE_FIELD_NAME);
       if (!savedData) {
         return;
       }
-      this.toggleState = JSON.parse(savedData);
-      for (let pinNumber = 0; pinNumber < NUMBER_OF_USABLE_GPIO_PINS; pinNumber++) {
+      const { sessionId, toggleState } = JSON.parse(savedData);
+      if (sessionId !== currentSessionId) {
+        return;
+      }
+      this.toggleState = toggleState;
+      for (
+        let pinNumber = 0;
+        pinNumber < NUMBER_OF_USABLE_GPIO_PINS;
+        pinNumber++
+      ) {
         const toggleValue = this.toggleState[pinNumber];
         // TODO: This is pretty fragile, rewrite this logic later
         switch (toggleValue) {
@@ -810,12 +823,16 @@ namespace pxsim.visuals {
     }
 
     private saveToggleState() {
-      const savedData = JSON.stringify(this.toggleState);
-      const tokenName = this.getLocalStorageTokenName();
-      if (!tokenName) {
+      const sessionId = this.getCurrentSessionId();
+      if (!sessionId) {
         return;
       }
-      window.localStorage.setItem(tokenName, savedData);
+      const chibiClipPersistedState = {
+        sessionId,
+        toggleState: this.toggleState,
+      };
+      const savedData = JSON.stringify(chibiClipPersistedState);
+      window.localStorage.setItem(LOCAL_STORAGE_FIELD_NAME, savedData);
     }
 
     public init(
@@ -960,7 +977,11 @@ namespace pxsim.visuals {
 
     private redrawLightWiresIfNeeded(switchCircuitPinNumber: number) {
       // If a pin after me has a light
-      for (let i = switchCircuitPinNumber + 1; i < NUMBER_OF_USABLE_GPIO_PINS; i++) {
+      for (
+        let i = switchCircuitPinNumber + 1;
+        i < NUMBER_OF_USABLE_GPIO_PINS;
+        i++
+      ) {
         const value = this.getToggleValue(i, LIGHT_GROUP_CLASS_NAME);
         if (value === ToggleValue.On) {
           this.removeCircuitForLight(i);
