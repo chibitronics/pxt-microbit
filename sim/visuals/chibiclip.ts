@@ -146,6 +146,12 @@ function gpioPinNumberToVisalizerPin(pinNumber: number) {
   throw `invalid pin ${pinNumber}`;
 }
 
+enum ToggleStateValues {
+  HasSwitch,
+  HasLight,
+  HasNothing,
+}
+
 namespace pxsim.visuals {
   function createSvgElement(tagName: string) {
     return document.createElementNS("http://www.w3.org/2000/svg", tagName);
@@ -246,7 +252,10 @@ namespace pxsim.visuals {
     );
 
     // Finally, black out pins 13, 14, 15 for now since they're buggy at the moment
-    const blackoutRect = createBlackoutRectangle(VisualizerPin.Pin3, VisualizerPin.Pin5);
+    const blackoutRect = createBlackoutRectangle(
+      VisualizerPin.Pin3,
+      VisualizerPin.Pin5
+    );
     group.append(blackoutRect);
 
     return root.firstElementChild as SVGAElement;
@@ -322,7 +331,7 @@ namespace pxsim.visuals {
 
   function createBlackoutRectangle(
     rectangleStart: VisualizerPin,
-    rectangleEnd: VisualizerPin,
+    rectangleEnd: VisualizerPin
   ) {
     const startPositionNumber = visualizerPinToPositionNumber(rectangleStart);
     const endPositionNumber = visualizerPinToPositionNumber(rectangleEnd);
@@ -344,17 +353,11 @@ namespace pxsim.visuals {
     return pinRect;
   }
 
-  function createPinLabel(
-    visualizerPin: VisualizerPin,
-    text: string
-  ) {
+  function createPinLabel(visualizerPin: VisualizerPin, text: string) {
     return drawPinText(visualizerPin, text, "pin-label", TEXT_Y);
   }
 
-  function createPinTopLabel(
-    visualizerPin: VisualizerPin,
-    text: string
-  ) {
+  function createPinTopLabel(visualizerPin: VisualizerPin, text: string) {
     return drawPinText(visualizerPin, text, "pin-top-label", TEXT_TOP_Y);
   }
 
@@ -362,7 +365,7 @@ namespace pxsim.visuals {
     visualizerPin: VisualizerPin,
     text: string,
     className: string,
-    yPosition: number,
+    yPosition: number
   ) {
     const labelText = createSvgElement("text");
     labelText.classList.add(className);
@@ -374,7 +377,6 @@ namespace pxsim.visuals {
     labelText.innerHTML = text;
     return labelText;
   }
-
 
   function createLightTriangle(
     visualizerPin: VisualizerPin,
@@ -706,12 +708,92 @@ namespace pxsim.visuals {
     public overElement: SVGElement;
     public defs: SVGElement[];
     private state: EdgeConnectorState;
+    private toggleState = [
+      ToggleStateValues.HasNothing,
+      ToggleStateValues.HasNothing,
+      ToggleStateValues.HasNothing,
+      ToggleStateValues.HasNothing,
+      ToggleStateValues.HasNothing,
+      ToggleStateValues.HasNothing,
+    ];
     private part: SVGElAndSize;
     private lastLocation: Coord;
     private stripGroup: SVGGElement;
 
     constructor() {
       console.log("ChibiClipView constructed");
+    }
+
+    private getLocalStorageTokenName() {
+      try {
+        const iframeIdentifier = (window.frameElement as any).dataset.runid;
+        if (!iframeIdentifier) {
+          return null;
+        }
+        return `chibiclip-saved-state-${iframeIdentifier}`;
+      } catch {
+        console.error(`something went wrong with loading state, abort`);
+        return null;
+      }
+    }
+
+    private loadToggleState() {
+      const tokenName = this.getLocalStorageTokenName();
+      if (!tokenName) {
+        return;
+      }
+      const savedData = window.localStorage.getItem(tokenName);
+      if (!savedData) {
+        return;
+      }
+      this.toggleState = JSON.parse(savedData);
+      for (let pinNumber = 0; pinNumber < NUMBER_OF_GPIO_PINS; pinNumber++) {
+        const toggleValue = this.toggleState[pinNumber];
+        // TODO: This is pretty fragile, rewrite this logic later
+        switch (toggleValue) {
+          case ToggleStateValues.HasSwitch:
+            this.setToggleValue(
+              pinNumber,
+              SWITCH_GROUP_CLASS_NAME,
+              ToggleValue.On,
+              false
+            );
+            this.setToggleValue(
+              pinNumber,
+              LIGHT_GROUP_CLASS_NAME,
+              ToggleValue.OffAndDisabled,
+              false
+            );
+            this.addCircuitElementsForSwitch(pinNumber);
+            break;
+          case ToggleStateValues.HasLight:
+            this.setToggleValue(
+              pinNumber,
+              LIGHT_GROUP_CLASS_NAME,
+              ToggleValue.On,
+              false
+            );
+            this.setToggleValue(
+              pinNumber,
+              SWITCH_GROUP_CLASS_NAME,
+              ToggleValue.OffAndDisabled,
+              false
+            );
+            this.addCircuitElementsForLight(pinNumber);
+            break;
+          case ToggleStateValues.HasNothing:
+            break;
+        }
+      }
+    }
+
+    private saveToggleState() {
+      const savedData = JSON.stringify(this.toggleState);
+      const tokenName = this.getLocalStorageTokenName();
+      if (!tokenName) {
+        return;
+      }
+      window.localStorage.setItem(tokenName, savedData);
     }
 
     public init(
@@ -768,7 +850,6 @@ namespace pxsim.visuals {
         toggle.addEventListener("click", () => {
           const toggleBody = toggle.querySelector(`.toggle`);
           const pinNumber = parseInt(toggleBody.getAttribute("data-pin-index"));
-          const pin = this.getPinFromIndexNumber(pinNumber);
           const toggleValue = this.getToggleValue(
             pinNumber,
             LIGHT_GROUP_CLASS_NAME
@@ -780,22 +861,27 @@ namespace pxsim.visuals {
               break;
             case ToggleValue.OffAndEnabled:
               this.addLightCircuit(pinNumber);
-              this.disableSwitchToggle(pinNumber, pin);
+              this.disableSwitchToggle(pinNumber);
               break;
             case ToggleValue.OffAndDisabled:
               break; // do nothing
           }
         });
       }
+
+      this.loadToggleState();
     }
 
     private addSwitchCircuit(pinNumber: number) {
       this.setToggleValue(pinNumber, SWITCH_GROUP_CLASS_NAME, ToggleValue.On);
+      this.addCircuitElementsForSwitch(pinNumber);
+      this.redrawLightWiresIfNeeded(pinNumber);
+    }
+
+    private addCircuitElementsForSwitch(pinNumber: number) {
       const wireEl = createSwitchFromPinToVoltage(pinNumber);
       this.part.el.append(wireEl);
       this.addEventListenerForClickableSwitch(pinNumber);
-
-      this.redrawLightWiresIfNeeded(pinNumber);
     }
 
     private addEventListenerForClickableSwitch(pinNumber: number) {
@@ -842,7 +928,7 @@ namespace pxsim.visuals {
       );
     }
 
-    private disableSwitchToggle(pinNumber: number, pin: Pin) {
+    private disableSwitchToggle(pinNumber: number) {
       this.setToggleValue(
         pinNumber,
         SWITCH_GROUP_CLASS_NAME,
@@ -954,27 +1040,43 @@ namespace pxsim.visuals {
     }
 
     private getToggleValue(pinNumber: number, groupClassName: string) {
-      const toggleGroup = this.element.querySelector(
-        `#${getToggleIdName(pinNumber, groupClassName)}`
-      );
-      if (toggleGroup.classList.contains("on")) {
-        return ToggleValue.On;
-      } else if (toggleGroup.classList.contains("off")) {
-        return ToggleValue.OffAndEnabled;
+      const pinToggleValue = this.toggleState[pinNumber];
+      // TODO: Rewrite this to not rely on groupClassName, this is super ugly and hacky
+      if (groupClassName === LIGHT_GROUP_CLASS_NAME) {
+        switch (pinToggleValue) {
+          case ToggleStateValues.HasSwitch:
+            return ToggleValue.OffAndDisabled;
+          case ToggleStateValues.HasLight:
+            return ToggleValue.On;
+          case ToggleStateValues.HasNothing:
+            return ToggleValue.OffAndEnabled;
+        }
+      } else if (groupClassName === SWITCH_GROUP_CLASS_NAME) {
+        switch (pinToggleValue) {
+          case ToggleStateValues.HasSwitch:
+            return ToggleValue.On;
+          case ToggleStateValues.HasLight:
+            return ToggleValue.OffAndDisabled;
+          case ToggleStateValues.HasNothing:
+            return ToggleValue.OffAndEnabled;
+        }
       } else {
-        return ToggleValue.OffAndDisabled;
+        throw `unexpected class name: ${groupClassName}`;
       }
     }
 
     private setToggleValue(
       pinNumber: number,
-      groupName: string,
-      value: ToggleValue
+      groupClassName: string,
+      pinToggleValue: ToggleValue,
+      saveToLocalStorage = true
     ) {
+      // TODO: Rewrite this whole function, this is super ugly and hacky
+
       const toggleGroup = this.element.querySelector(
-        `#${getToggleIdName(pinNumber, groupName)}`
+        `#${getToggleIdName(pinNumber, groupClassName)}`
       );
-      switch (value) {
+      switch (pinToggleValue) {
         case ToggleValue.On:
           toggleGroup.classList.add("on");
           toggleGroup.classList.remove("disabled", "off");
@@ -986,6 +1088,37 @@ namespace pxsim.visuals {
         case ToggleValue.OffAndDisabled:
           toggleGroup.classList.add("disabled");
           toggleGroup.classList.remove("off", "on");
+      }
+
+      if (groupClassName === LIGHT_GROUP_CLASS_NAME) {
+        switch (pinToggleValue) {
+          case ToggleValue.On:
+            this.toggleState[pinNumber] = ToggleStateValues.HasLight;
+            break;
+          case ToggleValue.OffAndEnabled:
+            this.toggleState[pinNumber] = ToggleStateValues.HasNothing;
+            break;
+          case ToggleValue.OffAndDisabled:
+            this.toggleState[pinNumber] = ToggleStateValues.HasSwitch;
+            break;
+        }
+      } else if (groupClassName === SWITCH_GROUP_CLASS_NAME) {
+        switch (pinToggleValue) {
+          case ToggleValue.On:
+            this.toggleState[pinNumber] = ToggleStateValues.HasSwitch;
+            break;
+          case ToggleValue.OffAndEnabled:
+            this.toggleState[pinNumber] = ToggleStateValues.HasNothing;
+            break;
+          case ToggleValue.OffAndDisabled:
+            this.toggleState[pinNumber] = ToggleStateValues.HasLight;
+            break;
+        }
+      } else {
+        throw `unexpected class name: ${groupClassName}`;
+      }
+      if (saveToLocalStorage) {
+        this.saveToggleState();
       }
     }
 
