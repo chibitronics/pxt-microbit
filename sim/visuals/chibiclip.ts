@@ -686,6 +686,10 @@ namespace pxsim.visuals {
               cursor: pointer;
             }
             
+            .${CLICKABLE_SWITCH_CLASS_NAME}.on {
+              stroke: Gray;
+            }
+
             .toggle-group.off:hover .toggle,
             .toggle-group.on:hover .toggle {
               fill: gray;
