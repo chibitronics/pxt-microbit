@@ -673,6 +673,13 @@ namespace pxsim.visuals {
               user-select: none;
             }
 
+            .voltage-on {
+              stroke, rgb(235, 235, 235);
+              stroke-width: 3;
+              stroke-miterlimit: 10;
+              filter: url("#ledGlow");
+            }
+
             .${CLICKABLE_SWITCH_CLASS_NAME},
             .toggle-group.on,
             .toggle-group.off {
@@ -1200,7 +1207,7 @@ namespace pxsim.visuals {
       );
 
       if (isOn) {
-        pinFillEl.setAttribute("fill", CHIBI_NEON_GREEN_COLOR; //chibineongreen
+        pinFillEl.setAttribute("fill", CHIBI_NEON_GREEN_COLOR); //chibineongreen
         this.setLedOn(pinLedFillEl, 100);
         if (lightEl) {
           this.setLedOn(lightEl, 100);
