@@ -1,5 +1,11 @@
 const ANALOG_PIN_MAX_VALUE = 1023;
-type DigitalPinBlockParameter = "Pin 0" | "Pin 1" | "Pin 2" | "Pin 3" | "Pin 4" | "Pin 5";
+type DigitalPinBlockParameter =
+  | "Pin 0"
+  | "Pin 1"
+  | "Pin 2"
+  | "Pin 3"
+  | "Pin 4"
+  | "Pin 5";
 type AnalogPinBlockParameter = DigitalPinBlockParameter;
 
 // TODO: Some of these aren't exposed anymore in the public API, so let's clean up later.
@@ -363,7 +369,13 @@ function fade(tempo = 16) {
     tempo,
     7
   );
-  return firstCommands.concat(secondCommands);
+  const allCommands = firstCommands.concat(secondCommands);
+  const finalWriteCommand: WriteCommand = {
+    type: CommandType.Write,
+    value: 0,
+  };
+  allCommands.push(finalWriteCommand);
+  return allCommands;
 }
 
 function heartbeat(tempo = 50) {
