@@ -726,7 +726,7 @@ namespace pxsim.visuals {
 
     private getLocalStorageTokenName() {
       try {
-        const iframeIdentifier = (window.frameElement as any).dataset.runid;
+        const iframeIdentifier = window.frameElement.id;
         if (!iframeIdentifier) {
           return null;
         }
