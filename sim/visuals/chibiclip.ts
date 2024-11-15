@@ -1,8 +1,8 @@
 const ANALOG_PIN_MAX_VALUE = 1023;
 
 const CLIP_X = 38;
-const CLIP_Y = 220;
-// const CLIP_Y = 220 + 120; // for testing (lets us see the underlying pins)
+const CLIP_Y = 225;
+// const CLIP_Y = 225 + 120; // for testing (lets us see the underlying pins)
 
 const CLIP_WIDTH = 420;
 const CLIP_HEIGHT = 120;
