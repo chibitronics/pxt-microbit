@@ -125,7 +125,7 @@ namespace ChibiClip {
   //% block="set $pin to $on"
   //% pin.fieldEditor="textdropdown"
   //% pin.fieldOptions.decompileLiterals=true
-  //% pin.fieldOptions.values='Pin 0,Pin 1,Pin 2,Pin 3,Pin 4,Pin 5'
+  //% pin.fieldOptions.values='Pin 0,Pin 1,Pin 2'
   //% pin.defl='Pin 0'
   //% on.shadow="toggleOnOff"
   //% parts=chibiclip
@@ -150,7 +150,7 @@ namespace ChibiClip {
   //% block="set $pin level to $level"
   //% pin.fieldEditor="textdropdown"
   //% pin.fieldOptions.decompileLiterals=true
-  //% pin.fieldOptions.values='Pin 0,Pin 1,Pin 2,Pin 3,Pin 4,Pin 5'
+  //% pin.fieldOptions.values='Pin 0,Pin 1,Pin 2'
   //% pin.defl='Pin 0'
   //% level.min=0 level.max=100
   //% parts=chibiclip
@@ -181,7 +181,7 @@ namespace ChibiClip {
   //% effect.defl='blink'
   //% pin.fieldEditor="textdropdown"
   //% pin.fieldOptions.decompileLiterals=true
-  //% pin.fieldOptions.values='Pin 0,Pin 1,Pin 2,Pin 3,Pin 4,Pin 5'
+  //% pin.fieldOptions.values='Pin 0,Pin 1,Pin 2'
   //% pin.defl='Pin 0'
   //% parts=chibiclip
   //% group="Lights"
@@ -226,7 +226,7 @@ namespace ChibiClip {
   //% block="when $pin is $eventType"
   //% pin.fieldEditor="textdropdown"
   //% pin.fieldOptions.decompileLiterals=true
-  //% pin.fieldOptions.values='Pin 0,Pin 1,Pin 2,Pin 3,Pin 4,Pin 5'
+  //% pin.fieldOptions.values='Pin 0,Pin 1,Pin 2'
   //% pin.defl='Pin 0'
   //% eventType.fieldEditor="textdropdown"
   //% eventType.fieldOptions.decompileLiterals=true

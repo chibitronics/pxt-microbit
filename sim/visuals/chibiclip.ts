@@ -8,6 +8,7 @@ const CLIP_WIDTH = 420;
 const CLIP_HEIGHT = 120;
 
 const NUMBER_OF_GPIO_PINS = 6;
+const NUMBER_OF_USABLE_GPIO_PINS = 3; // Using only the first 3 pins for now
 const TOTAL_NUMBER_OF_PINS = NUMBER_OF_GPIO_PINS + 3; // GPIO + power + 2 grounds
 
 const ITEM_WIDTH = 30;
@@ -221,7 +222,7 @@ namespace pxsim.visuals {
     group.append(leftGroundPin);
 
     // Add gpio pins
-    for (let i = 0; i < NUMBER_OF_GPIO_PINS; i++) {
+    for (let i = 0; i < NUMBER_OF_USABLE_GPIO_PINS; i++) {
       const pinGroup = createGpioPin(i);
       group.append(pinGroup);
     }
@@ -589,7 +590,7 @@ namespace pxsim.visuals {
     labelText.innerHTML = label;
     group.append(labelText);
 
-    for (let i = 0; i < NUMBER_OF_GPIO_PINS; i++) {
+    for (let i = 0; i < NUMBER_OF_USABLE_GPIO_PINS; i++) {
       const toggle = createToggle(i, groupClassName, yOffset);
       group.append(toggle);
     }
@@ -747,7 +748,7 @@ namespace pxsim.visuals {
         return;
       }
       this.toggleState = JSON.parse(savedData);
-      for (let pinNumber = 0; pinNumber < NUMBER_OF_GPIO_PINS; pinNumber++) {
+      for (let pinNumber = 0; pinNumber < NUMBER_OF_USABLE_GPIO_PINS; pinNumber++) {
         const toggleValue = this.toggleState[pinNumber];
         // TODO: This is pretty fragile, rewrite this logic later
         switch (toggleValue) {
@@ -938,7 +939,7 @@ namespace pxsim.visuals {
 
     private redrawLightWiresIfNeeded(switchCircuitPinNumber: number) {
       // If a pin after me has a light
-      for (let i = switchCircuitPinNumber + 1; i < NUMBER_OF_GPIO_PINS; i++) {
+      for (let i = switchCircuitPinNumber + 1; i < NUMBER_OF_USABLE_GPIO_PINS; i++) {
         const value = this.getToggleValue(i, LIGHT_GROUP_CLASS_NAME);
         if (value === ToggleValue.On) {
           this.removeCircuitForLight(i);
@@ -1137,7 +1138,7 @@ namespace pxsim.visuals {
     }
 
     public updateState(): void {
-      for (let i = 0; i < NUMBER_OF_GPIO_PINS; i++) {
+      for (let i = 0; i < NUMBER_OF_USABLE_GPIO_PINS; i++) {
         const pinLoaded = this.element.querySelector(`#pin${i}`);
         if (!pinLoaded) {
           return;
