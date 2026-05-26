@@ -63,6 +63,11 @@ const prevPinValues: Array<number> = [
 //% color=#f91b4f weight=100 icon="\uf0c6" block="Chibi Clip" groups="['Lights', 'Sensing']"
 namespace ChibiClip {
   function init() {
+    // Set pull on pins to pull-up
+    pins.setPull(DigitalPin.P0, PinPullMode.PullUp);
+    pins.setPull(DigitalPin.P1, PinPullMode.PullUp);
+    pins.setPull(DigitalPin.P2, PinPullMode.PullUp);
+
     // Initialize empty event handlers.
     for (let i = 0; i < TOTAL_GPIO_PINS; i++) {
       const empty: EventHandlersForPin = {
@@ -110,7 +115,9 @@ namespace ChibiClip {
         if (lowToHigh && handlersForPin.onHigh) {
           handlersForPin.onHigh();
         }
-        if (lowToHigh && handlersForPin.onPressed) {
+
+        // Consider "on pressed" when we are high voltage going to low voltage.
+        if (highToLow && handlersForPin.onPressed) {
           handlersForPin.onPressed();
         }
         if (highToLow && handlersForPin.onLow) {
@@ -128,7 +135,7 @@ namespace ChibiClip {
    * Turns the light on or off at the given pin value.
    */
   //% blockId=chibiclip_set
-  //% block="set $pin to $on"
+  //% block="turn $pin $on"
   //% pin.fieldEditor="textdropdown"
   //% pin.fieldOptions.decompileLiterals=true
   //% pin.fieldOptions.values='Pin 0,Pin 1,Pin 2'
@@ -153,7 +160,7 @@ namespace ChibiClip {
    * Dims the light at the pin to the given brightness.
    */
   //% blockId=chibiclip_setlevel
-  //% block="set $pin level to $level"
+  //% block="set $pin level to $level \\%"
   //% pin.fieldEditor="textdropdown"
   //% pin.fieldOptions.decompileLiterals=true
   //% pin.fieldOptions.values='Pin 0,Pin 1,Pin 2'
