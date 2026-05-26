@@ -27,7 +27,7 @@ const CIRCLE_RADIUS = 14;
 const CIRCLE_DEFAULT_FILL = "transparent";
 const CIRCLE_Y = -37;
 
-const TEXT_Y = RECT_Y + RECT_Y / 2;
+const TEXT_Y = 6;
 const TEXT_TOP_Y = RECT_Y + RECT_Y / 4;
 const TEXT_X_DISTANCE = SPACING;
 
@@ -215,6 +215,12 @@ namespace pxsim.visuals {
     const light2 = createIndicatorLight(VisualizerPin.Pin2, 2);
     group.append(light2);
 
+    // Add + and -
+    const plusLabelEl = createPinLabel(VisualizerPin.ThreeVolt, "+");
+    group.append(plusLabelEl);
+    const minusLabelEl = createPinLabel(VisualizerPin.RightGround, "-");
+    group.append(minusLabelEl);
+
     // Add toggles add/remove switches
     group.append(
       addToggles(SWITCH_TOGGLES_Y, SWITCH_GROUP_CLASS_NAME, "Add Switch"),
@@ -224,6 +230,27 @@ namespace pxsim.visuals {
     );
 
     return root.firstElementChild as SVGAElement;
+  }
+
+  function createPinLabel(visualizerPin: VisualizerPin, text: string) {
+    return drawPinText(visualizerPin, text, "pin-label", TEXT_Y);
+  }
+
+  function drawPinText(
+    visualizerPin: VisualizerPin,
+    text: string,
+    className: string,
+    yPosition: number,
+  ) {
+    const labelText = createSvgElement("text");
+    labelText.classList.add(className);
+    labelText.setAttribute(
+      "x",
+      `${getRectangleXCoordinateForPin(visualizerPin)}`,
+    );
+    labelText.setAttribute("y", `${yPosition}`);
+    labelText.innerHTML = text;
+    return labelText;
   }
 
   function createLightTriangle(
@@ -569,6 +596,10 @@ namespace pxsim.visuals {
             .pin-label, .pin-top-label {
               font-family: "Courier New";
               text-anchor: middle;
+            }
+
+            .pin-label {
+              font-size: 14px;
             }
 
             svg text.pin-top-label {
@@ -1039,7 +1070,7 @@ namespace pxsim.visuals {
     public updateState(): void {
       for (let i = 0; i < NUMBER_OF_USABLE_GPIO_PINS; i++) {
         const pin = this.getPinFromIndexNumber(i);
-        
+
         const pinLoaded = this.element.querySelector(`#pin${i}`);
         if (!pinLoaded) {
           return;
@@ -1047,7 +1078,7 @@ namespace pxsim.visuals {
         this.resetPin(i);
 
         if (pin.isChibitronicsSwitchConnected) {
-          this.updateDigitalDisplayWithValue(i, true);
+          this.updateDigitalDisplayWithValue(i, false);
           continue;
         }
 
