@@ -1,22 +1,20 @@
 const ANALOG_PIN_MAX_VALUE = 1023;
 
-const CLIP_X = 38;
-const CLIP_Y = 225;
+const CLIP_X = 40;
+const CLIP_Y = 280;
 // const CLIP_Y = 225 + 120; // for testing (lets us see the underlying pins)
 
 const CLIP_WIDTH = 420;
-const CLIP_HEIGHT = 120;
+const CLIP_HEIGHT = 0;
 
 const NUMBER_OF_GPIO_PINS = 6;
 const NUMBER_OF_USABLE_GPIO_PINS = 3; // Using only the first 3 pins for now
 const TOTAL_NUMBER_OF_PINS = NUMBER_OF_GPIO_PINS + 3; // GPIO + power + 2 grounds
 
-const ITEM_WIDTH = 30;
-const GAP = 15;
+const ITEM_WIDTH = 26;
+const GAP = 50;
 const SPACING = ITEM_WIDTH + GAP;
-const ALL_ITEMS_WIDTH =
-  TOTAL_NUMBER_OF_PINS * ITEM_WIDTH + GAP * (TOTAL_NUMBER_OF_PINS - 1);
-const X_OFFSET = (CLIP_WIDTH - ALL_ITEMS_WIDTH) / 2;
+const X_OFFSET = -20;
 
 const RECT_WIDTH = ITEM_WIDTH;
 const RECT_HEIGHT = 50;
@@ -44,17 +42,17 @@ const PIN_INDEX_DATA_NAME = "data-pin-index";
 const WIRE_WIDTH = 12;
 const WIRE_CLASS_NAME = "wire";
 
-const SWITCH_WIRE_HEIGHT = 100;
+const SWITCH_WIRE_HEIGHT = 120;
 const SWITCH_TOGGLES_Y = CLIP_HEIGHT + SWITCH_WIRE_HEIGHT + WIRE_WIDTH + 100;
 const SWITCH_GROUP_CLASS_NAME = "all-switch-toggles";
 const CLICKABLE_SWITCH_CLASS_NAME = "clickable-switch";
-const SWITCH_OFF_INITIAL_WIRE_HEIGHT = 30;
-const CLICKABLE_SWITCH_WIRE_LENGTH = 30;
+const SWITCH_OFF_INITIAL_WIRE_HEIGHT = 40;
+const CLICKABLE_SWITCH_WIRE_LENGTH = 40;
 const SWITCH_OFF_ROTATION_DEG = 45;
 
 const LIGHT_TOGGLES_Y = SWITCH_TOGGLES_Y + 100;
 const LIGHT_GROUP_CLASS_NAME = "all-light-toggles";
-const LIGHT_WIRE_HEIGHT = 140;
+const LIGHT_WIRE_HEIGHT = 160;
 const LIGHT_WIRE_JUMP_HEIGHT = 40;
 const LIGHT_WIRE_BEZIER_CURVE_HEIGHT = 25;
 const LIGHT_WIDTH = 36;
@@ -189,14 +187,26 @@ namespace pxsim.visuals {
     return TEXT_X_OFFSET + TEXT_X_DISTANCE * positionNumber;
   }
 
-  function getCircleCoordinateForPin(visualizerPin: VisualizerPin) {
-    const positionNumber = visualizerPinToPositionNumber(visualizerPin);
-    return CIRCLE_X_OFFSET + CIRCLE_X_DISTANCE * positionNumber;
-  }
-
   function getRectangleXCoordinateForPin(visualizerPin: VisualizerPin) {
-    const positionNumber = visualizerPinToPositionNumber(visualizerPin);
-    return RECT_X_OFFSET + RECT_X_DISTANCE * positionNumber;
+    switch (visualizerPin) {
+      case VisualizerPin.Pin0:
+        return 59
+      case VisualizerPin.Pin1:
+        return 129
+      case VisualizerPin.Pin2:
+        return 208;
+      case VisualizerPin.ThreeVolt:
+        return 286;
+      case VisualizerPin.RightGround:
+        return 355;
+      case VisualizerPin.LeftGround:
+        return 355;
+      case VisualizerPin.Pin3:
+      case VisualizerPin.Pin4:
+      case VisualizerPin.Pin5:
+        console.error("should not reach - these pins are unused");
+        return 0;
+    }
   }
 
   function generateSvg(): SVGAElement {
@@ -208,45 +218,6 @@ namespace pxsim.visuals {
     group.append(defEl);
     root.append(group);
 
-    // Add clip element
-    const clipElement = createSvgElement("rect");
-    clipElement.setAttribute("width", `${CLIP_WIDTH}`);
-    clipElement.setAttribute("height", `${CLIP_HEIGHT}`);
-    clipElement.setAttribute("fill", "hsl(44.772, 100%, 61%)"); //chibiyellow
-    group.append(clipElement);
-
-    // Add left ground
-    const leftGroundPin = createNonGpioPin(
-      VisualizerPin.LeftGround,
-      "ground",
-      "GND",
-      "-"
-    );
-    group.append(leftGroundPin);
-
-    // Add gpio pins
-    for (let i = 0; i < NUMBER_OF_USABLE_GPIO_PINS; i++) {
-      const pinGroup = createGpioPin(i);
-      group.append(pinGroup);
-    }
-
-    // Add power & right ground pins
-    const voltagePin = createNonGpioPin(
-      VisualizerPin.ThreeVolt,
-      "power",
-      "3V",
-      "+"
-    );
-    group.append(voltagePin);
-
-    const rightGround = createNonGpioPin(
-      VisualizerPin.RightGround,
-      "right-ground",
-      "GND",
-      "-"
-    );
-    group.append(rightGround);
-
     // Add toggles add/remove switches
     group.append(
       addToggles(SWITCH_TOGGLES_Y, SWITCH_GROUP_CLASS_NAME, "Add Switch")
@@ -255,141 +226,9 @@ namespace pxsim.visuals {
       addToggles(LIGHT_TOGGLES_Y, LIGHT_GROUP_CLASS_NAME, "Add Light")
     );
 
-    // Finally, black out pins 13, 14, 15 for now since they're buggy at the moment
-    const blackoutRect = createBlackoutRectangle(
-      VisualizerPin.Pin3,
-      VisualizerPin.Pin5
-    );
-    group.append(blackoutRect);
-
     return root.firstElementChild as SVGAElement;
   }
 
-  function createGpioPin(pinNumber: number) {
-    const visualizerPin = gpioPinNumberToVisalizerPin(pinNumber);
-    const pinGroup = createSvgElement("g");
-    pinGroup.setAttribute("id", `pin${pinNumber}`);
-
-    const defaultCircle = createLightCircle(
-      visualizerPin,
-      "default",
-      CIRCLE_DEFAULT_FILL
-    );
-    pinGroup.append(defaultCircle);
-
-    const levelCircle = createLightCircle(
-      visualizerPin,
-      "level",
-      "transparent"
-    );
-    pinGroup.append(levelCircle);
-
-    const defaultRect = createPinRectangle(
-      visualizerPin,
-      "default",
-      RECT_DEFAULT_FILL
-    );
-    pinGroup.append(defaultRect);
-
-    const levelRect = createPinRectangle(visualizerPin, "level", "transparent");
-    pinGroup.append(levelRect);
-
-    const label = createPinLabel(visualizerPin, `${pinNumber}`);
-    pinGroup.append(label);
-    return pinGroup;
-  }
-
-  function createNonGpioPin(
-    pin: NonGpioPin,
-    className: string,
-    topLabel: string,
-    bottomLabel: string
-  ) {
-    const group = createSvgElement("g");
-    const powerPin = createPinRectangle(pin, className, RECT_DEFAULT_FILL);
-    group.append(powerPin);
-    const bottomLabelEl = createPinLabel(pin, bottomLabel);
-    group.append(bottomLabelEl);
-    const topLabelEl = createPinTopLabel(pin, topLabel);
-    group.append(topLabelEl);
-
-    if (pin === VisualizerPin.ThreeVolt) {
-      const lightCircle = createLightCircle(
-        pin,
-        "voltage-on",
-        CHIBI_NEON_GREEN_COLOR
-      );
-      group.append(lightCircle);
-    }
-    return group;
-  }
-
-  function createPinRectangle(
-    visualizerPin: VisualizerPin,
-    className: string,
-    fillColor: string
-  ) {
-    const pinRect = createSvgElement("rect");
-    pinRect.classList.add(className);
-    pinRect.setAttribute(
-      "x",
-      `${getRectangleXCoordinateForPin(visualizerPin)}`
-    );
-    pinRect.setAttribute("y", `${RECT_Y}`);
-    pinRect.setAttribute("height", `${RECT_HEIGHT}`);
-    pinRect.setAttribute("width", `${RECT_WIDTH}`);
-    pinRect.setAttribute("fill", fillColor);
-    return pinRect;
-  }
-
-  function createBlackoutRectangle(
-    rectangleStart: VisualizerPin,
-    rectangleEnd: VisualizerPin
-  ) {
-    const startPositionNumber = visualizerPinToPositionNumber(rectangleStart);
-    const endPositionNumber = visualizerPinToPositionNumber(rectangleEnd);
-    const numberItems = endPositionNumber - startPositionNumber + 1;
-    if (numberItems <= 0) {
-      throw `invalid range: ${rectangleStart} ${rectangleEnd}`;
-    }
-    const pinRect = createSvgElement("rect");
-    pinRect.classList.add("blackout");
-    pinRect.setAttribute(
-      "x",
-      `${getRectangleXCoordinateForPin(rectangleStart)}`
-    );
-    const width = RECT_WIDTH * numberItems + GAP * (numberItems - 1);
-    pinRect.setAttribute("y", `${RECT_Y}`);
-    pinRect.setAttribute("height", `${RECT_HEIGHT}`);
-    pinRect.setAttribute("width", `${width}`);
-    pinRect.setAttribute("fill", "black");
-    return pinRect;
-  }
-
-  function createPinLabel(visualizerPin: VisualizerPin, text: string) {
-    return drawPinText(visualizerPin, text, "pin-label", TEXT_Y);
-  }
-
-  function createPinTopLabel(visualizerPin: VisualizerPin, text: string) {
-    return drawPinText(visualizerPin, text, "pin-top-label", TEXT_TOP_Y);
-  }
-
-  function drawPinText(
-    visualizerPin: VisualizerPin,
-    text: string,
-    className: string,
-    yPosition: number
-  ) {
-    const labelText = createSvgElement("text");
-    labelText.classList.add(className);
-    labelText.setAttribute(
-      "x",
-      `${getTextXCoordinateForPin(visualizerPin) + RECT_WIDTH / 2}`
-    );
-    labelText.setAttribute("y", `${yPosition}`);
-    labelText.innerHTML = text;
-    return labelText;
-  }
 
   function createLightTriangle(
     visualizerPin: VisualizerPin,
@@ -397,8 +236,7 @@ namespace pxsim.visuals {
   ) {
     const polygon = createSvgElement("polygon");
     polygon.classList.add(className);
-    const xCenterPoint =
-      getRectangleXCoordinateForPin(visualizerPin) + RECT_WIDTH / 2;
+    const xCenterPoint = getRectangleXCoordinateForPin(visualizerPin);
 
     const x1 = xCenterPoint - LIGHT_WIDTH / 2;
     const x2 = x1 + LIGHT_WIDTH;
@@ -412,23 +250,6 @@ namespace pxsim.visuals {
     return polygon;
   }
 
-  function createLightCircle(
-    visualizerPin: VisualizerPin,
-    className: string,
-    fillColor: string
-  ) {
-    const levelCircle = createSvgElement("circle");
-    levelCircle.classList.add(className);
-    levelCircle.setAttribute(
-      "cx",
-      `${getCircleCoordinateForPin(visualizerPin)}`
-    );
-    levelCircle.setAttribute("cy", `${CIRCLE_Y}`);
-    levelCircle.setAttribute("r", `${CIRCLE_RADIUS}`);
-    levelCircle.setAttribute("fill", fillColor);
-    return levelCircle;
-  }
-
   function createSwitchFromPinToVoltage(pinNumber: number) {
     const group = createSvgElement("g");
     group.setAttribute(
@@ -437,8 +258,7 @@ namespace pxsim.visuals {
     );
     const visualizerPin = gpioPinNumberToVisalizerPin(pinNumber);
 
-    const startingX =
-      getRectangleXCoordinateForPin(visualizerPin) + RECT_WIDTH / 2;
+    const startingX = getRectangleXCoordinateForPin(visualizerPin);
     const bottomOfClipY = CLIP_HEIGHT;
 
     // Draw the initial line before the gap.
@@ -473,8 +293,7 @@ namespace pxsim.visuals {
     remainingLineD += `V ${CLIP_HEIGHT + SWITCH_WIRE_HEIGHT} `;
 
     // 2. Draw the horizontal stroke
-    const powerPinStartingX =
-      getRectangleXCoordinateForPin(VisualizerPin.ThreeVolt) + RECT_WIDTH / 2;
+    const powerPinStartingX = getRectangleXCoordinateForPin(VisualizerPin.ThreeVolt);
     remainingLineD += `H ${powerPinStartingX} `;
 
     // 3. Draw the remaining vertical stroke
@@ -490,7 +309,7 @@ namespace pxsim.visuals {
   function getDrawValueForSwitch(pinNumber: number, isConnected: boolean) {
     const visualizerPin = gpioPinNumberToVisalizerPin(pinNumber);
     const wireStartingX =
-      getRectangleXCoordinateForPin(visualizerPin) + RECT_WIDTH / 2;
+      getRectangleXCoordinateForPin(visualizerPin);
     const wireStartingY = CLIP_HEIGHT + SWITCH_OFF_INITIAL_WIRE_HEIGHT;
 
     if (isConnected) {
@@ -538,18 +357,14 @@ namespace pxsim.visuals {
     );
 
     const startingX =
-      getRectangleXCoordinateForPin(visualizerPin) + RECT_WIDTH / 2;
+      getRectangleXCoordinateForPin(visualizerPin);
     const bottomOfClipY = RECT_Y + RECT_HEIGHT;
     const path = createSvgElement("path");
     path.classList.add(WIRE_CLASS_NAME);
 
     const x1 = startingX;
     const y1 = bottomOfClipY;
-    const leftGroundPositionNumber = visualizerPinToPositionNumber(
-      VisualizerPin.LeftGround
-    );
-    const lengthOfWire = RECT_X_DISTANCE * leftGroundPositionNumber;
-    const endWireX = RECT_X_OFFSET + RECT_WIDTH / 2 + lengthOfWire;
+    const endWireX = getRectangleXCoordinateForPin(VisualizerPin.RightGround);
 
     let d = "";
     if (hasJump) {
@@ -1181,12 +996,7 @@ namespace pxsim.visuals {
 
     public updateState(): void {
       for (let i = 0; i < NUMBER_OF_USABLE_GPIO_PINS; i++) {
-        const pinLoaded = this.element.querySelector(`#pin${i}`);
-        if (!pinLoaded) {
-          return;
-        }
         const pin = this.getPinFromIndexNumber(i);
-        this.resetPin(i);
 
         if (pin.isExternalVoltageApplied) {
           this.updateDigitalDisplayWithValue(i, true);
@@ -1203,19 +1013,6 @@ namespace pxsim.visuals {
       }
     }
 
-    private resetPin(index: number) {
-      const pinFillEl = this.element.querySelector(`#pin${index} rect.level`);
-      const pinLedFillEl = this.element.querySelector(
-        `#pin${index} circle.level`
-      );
-      pinLedFillEl.setAttribute("fill", "transparent");
-      pinFillEl.setAttribute("height", `${RECT_HEIGHT}`);
-      pinFillEl.setAttribute("y", `${RECT_Y}`);
-      pinFillEl.setAttribute("fill", "transparent");
-      pinLedFillEl.removeAttribute("stroke");
-      pinLedFillEl.removeAttribute("filter");
-    }
-
     private setDigitalDisplay(index: number) {
       const pin = this.getPinFromIndexNumber(index);
       const isOn = pin.value > 0;
@@ -1223,23 +1020,15 @@ namespace pxsim.visuals {
     }
 
     private updateDigitalDisplayWithValue(index: number, isOn: boolean) {
-      const pinFillEl = this.element.querySelector(`#pin${index} rect.level`);
-      const pinLedFillEl = this.element.querySelector(
-        `#pin${index} circle.level`
-      );
       const lightEl = this.element.querySelector(
         `#${getLightIdName(index)} .triangle-light`
       );
 
       if (isOn) {
-        pinFillEl.setAttribute("fill", CHIBI_NEON_GREEN_COLOR); //chibineongreen
-        this.setLedOn(pinLedFillEl, 100);
         if (lightEl) {
           this.setLedOn(lightEl, 100);
         }
       } else {
-        pinFillEl.setAttribute("fill", "transparent");
-        this.setLedOff(pinLedFillEl);
         if (lightEl) {
           this.setLedOff(lightEl);
         }
@@ -1250,21 +1039,11 @@ namespace pxsim.visuals {
       const pin = this.getPinFromIndexNumber(index);
       const percentFraction = pin.value / ANALOG_PIN_MAX_VALUE;
 
-      const pinFillEl = this.element.querySelector(`#pin${index} rect.level`);
-      const pinLedFillEl = this.element.querySelector(
-        `#pin${index} circle.level`
-      );
       const lightEl = this.element.querySelector(
         `#${getLightIdName(index)} .triangle-light`
       );
 
-      const fillHeight = RECT_HEIGHT * percentFraction;
-      pinFillEl.setAttribute("fill", CHIBI_NEON_GREEN_COLOR); //chibineongreen
-      pinFillEl.setAttribute("height", `${fillHeight}`);
-      pinFillEl.setAttribute("y", `${RECT_Y + (RECT_HEIGHT - fillHeight)}`);
-
       const alpha = percentFraction;
-      this.setLedOn(pinLedFillEl, alpha);
       if (lightEl) {
         this.setLedOn(lightEl, alpha);
       }
