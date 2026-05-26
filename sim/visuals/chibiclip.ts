@@ -755,11 +755,9 @@ namespace pxsim.visuals {
         if (this.isSwitchConnected(pinIndex)) {
           this.setSwitchIsConnected(pinIndex, false);
           pin.disconnectChibitronicsSwitch();
-          console.log('disconnect switch');
         } else {
           this.setSwitchIsConnected(pinIndex, true);
           pin.connectChibitronicsSwitch();
-          console.log('connect switch');
         }
       });
     }
@@ -771,7 +769,6 @@ namespace pxsim.visuals {
     private removeSwitchCircuit(pinNumber: number, pin: Pin) {
       if (this.isSwitchConnected(pinNumber)) {
         pin.disconnectChibitronicsSwitch();
-        console.log('disconnect switch 2');
       }
 
       this.setToggleValue(

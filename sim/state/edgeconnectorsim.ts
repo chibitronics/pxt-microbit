@@ -81,7 +81,6 @@ namespace pxsim {
       this.mode = PinFlags.Analog | PinFlags.Input;
       if (this.isChibitronicsSwitchConnected) {
         if (this.pull === PinPullMode.PullUp) {
-          console.log("this is pull up");
           return 0;
         } else {
           return PIN_MAX_VALUE;
