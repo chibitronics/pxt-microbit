@@ -1018,6 +1018,8 @@ namespace pxsim.visuals {
           this.setAnalogDisplay(i);
         } else if (isDigital) {
           this.setDigitalDisplay(i);
+        } else {
+          this.setAnalogDisplay(i);
         }
       }
     }

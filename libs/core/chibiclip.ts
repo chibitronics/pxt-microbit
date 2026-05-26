@@ -101,7 +101,7 @@ namespace ChibiClip {
         }
         const prevPinValue = prevPinValues[pinIndex];
         const currentPinValue = pins.digitalReadPin(
-          indexToDigitalPin(pinIndex)
+          indexToDigitalPin(pinIndex),
         );
         prevPinValues[pinIndex] = currentPinValue;
 
@@ -174,7 +174,7 @@ namespace ChibiClip {
   //% weight=2
   export function setLightLevel(
     pin: AnalogPinBlockParameter,
-    level: number
+    level: number,
   ): void {
     const analogPin = stringToAnalogPin(pin);
     const writePinValue = Math.round((level / 100.0) * ANALOG_PIN_MAX_VALUE);
@@ -188,7 +188,46 @@ namespace ChibiClip {
   }
 
   /**
-   *
+   * Reads the analog value at this pin as a percentage from 0 to 100.
+   */
+  //% block="analog read level $pin"
+  //% pin.fieldEditor="textdropdown"
+  //% pin.fieldOptions.decompileLiterals=true
+  //% pin.fieldOptions.values='Pin 0,Pin 1,Pin 2'
+  //% pin.defl='Pin 0'
+  //% parts=chibiclip
+  //% group="Lights"
+  //% weight=1
+  export function analogReadLevel(
+    pin: AnalogPinBlockParameter,
+  ) {
+    const analogPin = stringToAnalogPin(pin);
+    const level = pins.analogReadPin(analogPin);
+    const mappedPinValue = Math.round((level / ANALOG_PIN_MAX_VALUE) * 100.0);
+    return mappedPinValue;
+  }
+
+  /**
+   * Reads the digital value at this pin as 0 or 1.
+   */
+  //% block="digital read level $pin"
+  //% pin.fieldEditor="textdropdown"
+  //% pin.fieldOptions.decompileLiterals=true
+  //% pin.fieldOptions.values='Pin 0,Pin 1,Pin 2'
+  //% pin.defl='Pin 0'
+  //% parts=chibiclip
+  //% group="Lights"
+  //% weight=1
+  export function digitalReadLevel(
+    pin: DigitalPinBlockParameter,
+  ) {
+    const digitalPin = stringToDigitalPin(pin);
+    const level = pins.digitalReadPin(digitalPin);
+    return level;
+  }
+
+  /**
+   * Shows either a blink or fading light effect on the pin.
    */
   //% block="show $effect on $pin"
   //% effect.fieldEditor="textdropdown"
@@ -254,7 +293,7 @@ namespace ChibiClip {
   export function onPinEvent(
     pin: DigitalPinBlockParameter,
     eventType: DigitalPinEventParameter,
-    handler: () => void
+    handler: () => void,
   ) {
     const pinIndex = stringToPinNumber(pin);
 
@@ -349,7 +388,7 @@ function twinkle(tempo = 16) {
       current,
       getRandomInt(0, ANALOG_PIN_MAX_VALUE),
       tempo,
-      3
+      3,
     );
     append(allCommands, commands);
     current = endingValue;
@@ -371,13 +410,13 @@ function fade(tempo = 16) {
     0,
     ANALOG_PIN_MAX_VALUE,
     tempo,
-    7
+    7,
   );
   const { commands: secondCommands } = generateCommandsForFade(
     ANALOG_PIN_MAX_VALUE,
     0,
     tempo,
-    7
+    7,
   );
   const allCommands = firstCommands.concat(secondCommands);
   const finalWriteCommand: WriteCommand = {
@@ -472,7 +511,7 @@ function generateCommandsForFade(
   startingValue: number,
   targetValue: number,
   fadeDelta: number,
-  pauseInMs: number
+  pauseInMs: number,
 ) {
   const commands: Array<Command> = [];
   let currentValue = startingValue;
@@ -515,7 +554,7 @@ type Command = PauseCommand | WriteCommand;
 function executeCommands(
   commands: Array<Command>,
   pinIndex: number,
-  pin: AnalogPin
+  pin: AnalogPin,
 ) {
   // NOTE: We're doing something a bit weird here --
   // If this were regular JavaScript, we would want to execute each iteration of this loop in something like a setTimeout or a
@@ -536,7 +575,10 @@ function executeCommands(
         basic.pause(command.durationMs);
         continue;
       case CommandType.Write:
-        pins.analogWritePin(pin, command.value);
+        // PULL UP LOGIC
+        // The original code was written with pull-down in mind,
+        // so everything needs to be subtracted from MAX VALUE to work.
+        pins.analogWritePin(pin, ANALOG_PIN_MAX_VALUE - command.value);
         continue;
     }
   }

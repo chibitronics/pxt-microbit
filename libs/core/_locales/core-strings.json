@@ -50,6 +50,8 @@
   "BeatFraction.Whole|block": "1",
   "Buffer|block": "Buffer",
   "Button.AB|block": "A+B",
+  "ChibiClip.analogReadLevel|block": "analog read level $pin",
+  "ChibiClip.digitalReadLevel|block": "digital read level $pin",
   "ChibiClip.onPinEvent|block": "when $pin is $eventType",
   "ChibiClip.setLightLevel|block": "set $pin level to $level \\%",
   "ChibiClip.setLight|block": "turn $pin $on",
