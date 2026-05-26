@@ -52,7 +52,7 @@ const SWITCH_OFF_ROTATION_DEG = 45;
 
 const LIGHT_TOGGLES_Y = SWITCH_TOGGLES_Y + 100;
 const LIGHT_GROUP_CLASS_NAME = "all-light-toggles";
-const LIGHT_WIRE_HEIGHT = 160;
+const LIGHT_WIRE_HEIGHT = 120;
 const LIGHT_WIRE_JUMP_HEIGHT = 40;
 const LIGHT_WIRE_BEZIER_CURVE_HEIGHT = 25;
 const LIGHT_WIDTH = 36;
@@ -293,7 +293,7 @@ namespace pxsim.visuals {
     remainingLineD += `V ${CLIP_HEIGHT + SWITCH_WIRE_HEIGHT} `;
 
     // 2. Draw the horizontal stroke
-    const powerPinStartingX = getRectangleXCoordinateForPin(VisualizerPin.ThreeVolt);
+    const powerPinStartingX = getRectangleXCoordinateForPin(VisualizerPin.RightGround);
     remainingLineD += `H ${powerPinStartingX} `;
 
     // 3. Draw the remaining vertical stroke
@@ -346,6 +346,12 @@ namespace pxsim.visuals {
 
   function toRadians(angle: number) {
     return angle * (Math.PI / 180);
+  }
+
+
+  function createLightFromPinToGroundNoJump(pinNumber: number) {
+    // Turning off jumps for v2
+    return createLightFromPinToGround(pinNumber, false);
   }
 
   function createLightFromPinToGround(pinNumber: number, hasJump: boolean) {
@@ -748,10 +754,12 @@ namespace pxsim.visuals {
         const pin = this.getPinFromIndexNumber(pinIndex);
         if (this.isSwitchConnected(pinIndex)) {
           this.setSwitchIsConnected(pinIndex, false);
-          pin.removeExternalVoltage();
+          pin.disconnectChibitronicsSwitch();
+          console.log('disconnect switch');
         } else {
           this.setSwitchIsConnected(pinIndex, true);
-          pin.addExternalVoltage();
+          pin.connectChibitronicsSwitch();
+          console.log('connect switch');
         }
       });
     }
@@ -762,7 +770,8 @@ namespace pxsim.visuals {
 
     private removeSwitchCircuit(pinNumber: number, pin: Pin) {
       if (this.isSwitchConnected(pinNumber)) {
-        pin.removeExternalVoltage();
+        pin.disconnectChibitronicsSwitch();
+        console.log('disconnect switch 2');
       }
 
       this.setToggleValue(
@@ -822,9 +831,9 @@ namespace pxsim.visuals {
     }
 
     private addCircuitElementsForLight(pinNumber: number) {
-      const wireEl = createLightFromPinToGround(
-        pinNumber,
-        this.lightWireHasJump(pinNumber)
+      const wireEl = createLightFromPinToGroundNoJump(
+        pinNumber
+        // this.lightWireHasJump(pinNumber)
       );
       this.part.el.append(wireEl);
 
@@ -998,7 +1007,7 @@ namespace pxsim.visuals {
       for (let i = 0; i < NUMBER_OF_USABLE_GPIO_PINS; i++) {
         const pin = this.getPinFromIndexNumber(i);
 
-        if (pin.isExternalVoltageApplied) {
+        if (pin.isChibitronicsSwitchConnected) {
           this.updateDigitalDisplayWithValue(i, true);
           continue;
         }

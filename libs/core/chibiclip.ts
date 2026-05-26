@@ -115,15 +115,18 @@ namespace ChibiClip {
         if (lowToHigh && handlersForPin.onHigh) {
           handlersForPin.onHigh();
         }
+        if (highToLow && handlersForPin.onLow) {
+          handlersForPin.onLow();
+        }
 
+        // Pull-down:
         // Consider "on pressed" when we are high voltage going to low voltage.
         if (highToLow && handlersForPin.onPressed) {
           handlersForPin.onPressed();
         }
-        if (highToLow && handlersForPin.onLow) {
-          handlersForPin.onLow();
-        }
-        if (highToLow && handlersForPin.onReleased) {
+        // Pull-down:
+        // Consider released when we are going from low voltage to high.
+        if (lowToHigh && handlersForPin.onReleased) {
           handlersForPin.onReleased();
         }
       }
