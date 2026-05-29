@@ -1,14 +1,5 @@
 const ANALOG_PIN_MAX_VALUE = 1023;
 
-type DigitalPinBlockParameter =
-  | "Pin 0"
-  | "Pin 1"
-  | "Pin 2"
-  | "Pin 3"
-  | "Pin 4"
-  | "Pin 5";
-type AnalogPinBlockParameter = DigitalPinBlockParameter;
-
 enum PinBlockParameter {
   // HACK!!!! 
   // Omg so.... for some reason, MakeCode unhelpfully refactors out the number
@@ -18,6 +9,9 @@ enum PinBlockParameter {
   // Soooo for the block labels below, I'm actually using an "en space" character 
   // so that this doens't happen lol x_x.
   // https://www.namecheap.com/visual/font-generator/whitespace/ 
+  // Also, note that this must be a numberic enum, otherwise MakeCode will give
+  // compiler errors when the enum is in use - I think this is a requirement
+  // for enums used in functions.
   //% block="Pin 0"
   Pin0 = 0,
   //% block="Pin 1"
@@ -147,19 +141,15 @@ namespace ChibiClip {
    */
   //% blockId=chibiclip_set
   //% block="set $pin to $on"
-  //% pin.fieldEditor="textdropdown"
-  //% pin.fieldOptions.decompileLiterals=true
-  //% pin.fieldOptions.values='Pin 0,Pin 1,Pin 2'
-  //% pin.defl='Pin 0'
   //% on.shadow="toggleOnOff"
   //% parts=chibiclip
   //% group="Lights"
   //% weight=3
-  export function setLight(pin: DigitalPinBlockParameter, on: boolean): void {
-    const digitalPin = stringToDigitalPin(pin);
+  export function setLight(pin: PinBlockParameter, on: boolean): void {
+    const digitalPin = indexToDigitalPin(pin);
     const value = on ? 1 : 0;
     pins.digitalWritePin(digitalPin, value);
-    const pinIndex = stringToPinNumber(pin);
+    const pinIndex = pin;
 
     // Check to see if there's an effect in progress and if so, stop.
     if (pinEffectStatuses[pinIndex] === EffectStatus.EffectInProgress) {
@@ -172,22 +162,18 @@ namespace ChibiClip {
    */
   //% blockId=chibiclip_setlevel
   //% block="set $pin level to $level"
-  //% pin.fieldEditor="textdropdown"
-  //% pin.fieldOptions.decompileLiterals=true
-  //% pin.fieldOptions.values='Pin 0,Pin 1,Pin 2'
-  //% pin.defl='Pin 0'
   //% level.min=0 level.max=100
   //% parts=chibiclip
   //% group="Lights"
   //% weight=2
   export function setLightLevel(
-    pin: AnalogPinBlockParameter,
+    pin: PinBlockParameter,
     level: number
   ): void {
-    const analogPin = stringToAnalogPin(pin);
+    const analogPin = indexToAnalogPin(pin);
     const writePinValue = Math.round((level / 100.0) * ANALOG_PIN_MAX_VALUE);
     pins.analogWritePin(analogPin, writePinValue);
-    const pinIndex = stringToPinNumber(pin);
+    const pinIndex = pin;
 
     // Check to see if there's an effect in progress and if so, stop.
     if (pinEffectStatuses[pinIndex] === EffectStatus.EffectInProgress) {
@@ -230,31 +216,25 @@ namespace ChibiClip {
     return level === 1;
   }
 
+
   /**
    * Shows either a blink or fading light effect on the pin.
    */
   //% block="show $effect on $pin"
-  //% effect.fieldEditor="textdropdown"
-  //% effect.fieldOptions.decompileLiterals=true
-  //% effect.fieldOptions.values='blink,fade'
-  //% effect.defl='blink'
-  //% pin.fieldEditor="textdropdown"
-  //% pin.fieldOptions.decompileLiterals=true
-  //% pin.fieldOptions.values='Pin 0,Pin 1,Pin 2'
-  //% pin.defl='Pin 0'
   //% parts=chibiclip
   //% group="Lights"
   //% weight=1
   export function showEffectOnPin(
-    effect: EffectString,
-    pin: AnalogPinBlockParameter
+    effect: EffectBlockParameter,
+    pin: PinBlockParameter
   ) {
-    const analogPin = stringToAnalogPin(pin);
-    const pinIndex = stringToPinNumber(pin);
+    const analogPin = indexToAnalogPin(pin);
+    const pinIndex = pin;
     pinEffectStatuses[pinIndex] = EffectStatus.EffectInProgress;
 
     // Executes the animation
-    const commands = getCommandsForEffect(effect);
+    const effectString = getEffectStringFromBlockParameter(effect);
+    const commands = getCommandsForEffect(effectString);
     executeCommands(commands, pinIndex, analogPin);
 
     pinEffectStatuses[pinIndex] = EffectStatus.NoEffect;
@@ -283,41 +263,58 @@ namespace ChibiClip {
    * Register an event handler for various pin conditions.
    */
   //% block="when $pin is $eventType"
-  //% pin.fieldEditor="textdropdown"
-  //% pin.fieldOptions.decompileLiterals=true
-  //% pin.fieldOptions.values='Pin 0,Pin 1,Pin 2'
-  //% pin.defl='Pin 0'
-  //% eventType.fieldEditor="textdropdown"
-  //% eventType.fieldOptions.decompileLiterals=true
-  //% eventType.fieldOptions.values='pressed,released'
-  //% eventType.defl='pressed'
   //% parts=chibiclip
   //% group="Sensing"
   //% weight=3
   export function onPinEvent(
-    pin: DigitalPinBlockParameter,
-    eventType: DigitalPinEventParameter,
+    pin: PinBlockParameter,
+    eventType: PinEventParameter,
     handler: () => void
   ) {
-    const pinIndex = stringToPinNumber(pin);
+    const pinIndex = pin;
+    const eventString = getEventStringFromBlockParameter(eventType);
 
-    switch (eventType) {
+    switch (eventString) {
       case "pressed":
         pinToEventHandlers[pinIndex].onPressed = handler;
         break;
       case "released":
         pinToEventHandlers[pinIndex].onReleased = handler;
         break;
-      case "changed":
-        pinToEventHandlers[pinIndex].onChanged = handler;
-        break;
-      case "HIGH":
-        pinToEventHandlers[pinIndex].onHigh = handler;
-        break;
-      case "LOW":
-        pinToEventHandlers[pinIndex].onLow = handler;
-        break;
     }
+  }
+}
+
+
+enum EffectBlockParameter {
+  //% block="blink"
+  Blink = 0,
+  //% block="fade"
+  Fade = 1,
+}
+
+function getEffectStringFromBlockParameter(effect: EffectBlockParameter) {
+  switch (effect) {
+    case EffectBlockParameter.Blink:
+      return "blink";
+    case EffectBlockParameter.Fade:
+      return "fade";
+  }
+}
+
+enum PinEventParameter {
+  //% block="pressed"
+  Pressed = 0,
+  //% block="released"
+  Released = 1,
+}
+
+function getEventStringFromBlockParameter(effect: PinEventParameter) {
+  switch(effect) {
+    case PinEventParameter.Pressed:
+      return "pressed";
+    case PinEventParameter.Released:
+      return "released";
   }
 }
 
@@ -365,23 +362,6 @@ function indexToDigitalPin(pinIndex: number): DigitalPin {
     default:
       throw `not a valid index: ${pinIndex}`;
   }
-}
-
-function stringToAnalogPin(pinInput: AnalogPinBlockParameter): AnalogPin {
-  const index = stringToPinNumber(pinInput);
-  return indexToAnalogPin(index);
-}
-
-function stringToDigitalPin(pinInput: DigitalPinBlockParameter): DigitalPin {
-  const index = stringToPinNumber(pinInput);
-  return indexToDigitalPin(index);
-}
-
-function stringToPinNumber(pinInput: string): number {
-  if (pinInput.length !== 5) {
-    throw `Parameter is in unexpected format: ${pinInput}`;
-  }
-  return parseInt(pinInput[4]);
 }
 
 function twinkle(tempo = 16) {
