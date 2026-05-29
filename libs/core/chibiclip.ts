@@ -19,11 +19,11 @@ enum PinBlockParameter {
   // so that this doens't happen lol x_x.
   // https://www.namecheap.com/visual/font-generator/whitespace/ 
   //% block="Pin 0"
-  Pin0 = "Pin 0",
+  Pin0 = 0,
   //% block="Pin 1"
-  Pin1 = "Pin 1",
+  Pin1 = 1,
   //% block="Pin 2"
-  Pin2 = "Pin 2"
+  Pin2 = 2
 }
 
 // TODO: Some of these aren't exposed anymore in the public API, so let's clean up later.
@@ -205,7 +205,7 @@ namespace ChibiClip {
   export function analogReadLevel(
     pin: PinBlockParameter,
   ) {
-    const analogPin = stringToAnalogPin(pin);
+    const analogPin = indexToDigitalPin(pin);
     const level = pins.analogReadPin(analogPin);
     const mappedPinValue = Math.round((level / ANALOG_PIN_MAX_VALUE) * 100.0);
     return mappedPinValue;
@@ -224,7 +224,7 @@ namespace ChibiClip {
   export function pinIsOn(
     pin: PinBlockParameter,
   ) {
-    const digitalPin = stringToDigitalPin(pin);
+    const digitalPin = indexToDigitalPin(pin);
     const level = pins.digitalReadPin(digitalPin);
     // The pin is on when the level is 1.
     return level === 1;
