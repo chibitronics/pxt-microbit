@@ -1,4 +1,5 @@
 const ANALOG_PIN_MAX_VALUE = 1023;
+
 type DigitalPinBlockParameter =
   | "Pin 0"
   | "Pin 1"
@@ -7,6 +8,23 @@ type DigitalPinBlockParameter =
   | "Pin 4"
   | "Pin 5";
 type AnalogPinBlockParameter = DigitalPinBlockParameter;
+
+enum PinBlockParameter {
+  // HACK!!!! 
+  // Omg so.... for some reason, MakeCode unhelpfully refactors out the number
+  // from the label if you have an enum with "[name] [number]" -- like instead of
+  // the dropdown saying "Pin 0", the dropdown will be just "0" and Pin will be 
+  // part of the regular text... and I can't figure out how to turn this off.
+  // Soooo for the block labels below, I'm actually using an "en space" character 
+  // so that this doens't happen lol x_x.
+  // https://www.namecheap.com/visual/font-generator/whitespace/ 
+  //% block="Pin 0"
+  Pin0 = "Pin 0",
+  //% block="Pin 1"
+  Pin1 = "Pin 1",
+  //% block="Pin 2"
+  Pin2 = "Pin 2"
+}
 
 // TODO: Some of these aren't exposed anymore in the public API, so let's clean up later.
 type DigitalPinEventParameter =
@@ -150,7 +168,7 @@ namespace ChibiClip {
   }
 
   /**
-   * Dims the light at the pin to the given brightness.
+   * Sets the pin to the given level as a percentage value from 0 to 100.
    */
   //% blockId=chibiclip_setlevel
   //% block="set $pin level to $level"
@@ -177,8 +195,43 @@ namespace ChibiClip {
     }
   }
 
+  /** 
+   * Reads the level at this pin as a percentage from 0 to 100.
+   */
+  //% block="$pin level (\\%)"
+  //% parts=chibiclip
+  //% group="Lights"
+  //% weight=1
+  export function analogReadLevel(
+    pin: PinBlockParameter,
+  ) {
+    const analogPin = stringToAnalogPin(pin);
+    const level = pins.analogReadPin(analogPin);
+    const mappedPinValue = Math.round((level / ANALOG_PIN_MAX_VALUE) * 100.0);
+    return mappedPinValue;
+  }
+
+  // FYI: the `pin` parameter needs to be an enum instead of a dropdown
+  // because MakeCode has a bug where it turns the entire block white if
+  // the block starts with a dropdown -_-.
   /**
-   *
+   * Reads whether the pin is turned on or off.
+   */
+  //% block="$pin is on"
+  //% parts=chibiclip
+  //% group="Lights"
+  //% weight=1
+  export function pinIsOn(
+    pin: PinBlockParameter,
+  ) {
+    const digitalPin = stringToDigitalPin(pin);
+    const level = pins.digitalReadPin(digitalPin);
+    // The pin is on when the level is 1.
+    return level === 1;
+  }
+
+  /**
+   * Shows either a blink or fading light effect on the pin.
    */
   //% block="show $effect on $pin"
   //% effect.fieldEditor="textdropdown"
