@@ -839,13 +839,8 @@ namespace pxsim.visuals {
           clickableSwitchEl.getAttribute(PIN_INDEX_DATA_NAME),
         );
         const pin = this.getPinFromIndexNumber(pinIndex);
-        // if (this.isSwitchConnected(pinIndex)) {
-        //   this.setSwitchIsConnected(pinIndex, false);
-        //   pin.removeExternalVoltage();
-        // } else {
         this.setSwitchIsConnected(pinIndex, true);
         pin.addExternalVoltage();
-        // }
       });
     }
 
