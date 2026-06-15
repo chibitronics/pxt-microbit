@@ -357,7 +357,9 @@ namespace pxsim.visuals {
     remainingLineD += `V ${CLIP_HEIGHT + SWITCH_WIRE_HEIGHT} `;
 
     // 2. Draw the horizontal stroke
-    const powerPinStartingX = getRectangleXCoordinateForPin(VisualizerPin.ThreeVolt);
+    const powerPinStartingX = getRectangleXCoordinateForPin(
+      VisualizerPin.ThreeVolt,
+    );
     remainingLineD += `H ${powerPinStartingX} `;
 
     // 3. Draw the remaining vertical stroke
@@ -789,6 +791,24 @@ namespace pxsim.visuals {
         });
       }
 
+      // Disable all switches on mouse up.
+      // This is kind of a hack: Originally this logic was in `addEventListenerForClickableSwitch`,
+      // and the event listener was on each `clickableSwitchEl`. However, if your mouse pointer is no
+      // longer over the element when you un-press your mouse button, it will *not* fire `mouseup`. This
+      // happened frequently because the `clickableSwitchEl` moves when clicked. So instead of listening
+      // for `mouseup` on each element, we're listening for `mouseup` on the `window` and disconnecting
+      // any switch that's connected, if one is connected, since they should only be connected when actively
+      // pressing down. 
+      window.addEventListener("mouseup", () => {
+        for (let pinIndex = 0; pinIndex <= 2; pinIndex++) {
+          if (this.isSwitchConnected(pinIndex)) {
+            const pin = this.getPinFromIndexNumber(pinIndex);
+            this.setSwitchIsConnected(pinIndex, false);
+            pin.removeExternalVoltage();
+          }
+        }
+      });
+
       this.loadToggleState();
     }
 
@@ -806,19 +826,24 @@ namespace pxsim.visuals {
 
     private addEventListenerForClickableSwitch(pinNumber: number) {
       const clickableSwitchEl = this.getClickableSwitchElement(pinNumber);
+      if (!clickableSwitchEl) {
+        return;
+      }
       // Set its event listener.
-      clickableSwitchEl.addEventListener("click", () => {
+      // NOTE: Its corresponding "mouseup" listener is on `window` rather than
+      // on this element. See `init` for more details.
+      clickableSwitchEl.addEventListener("mousedown", () => {
         const pinIndex = parseInt(
           clickableSwitchEl.getAttribute(PIN_INDEX_DATA_NAME),
         );
         const pin = this.getPinFromIndexNumber(pinIndex);
-        if (this.isSwitchConnected(pinIndex)) {
-          this.setSwitchIsConnected(pinIndex, false);
-          pin.removeExternalVoltage();
-        } else {
-          this.setSwitchIsConnected(pinIndex, true);
-          pin.addExternalVoltage();
-        }
+        // if (this.isSwitchConnected(pinIndex)) {
+        //   this.setSwitchIsConnected(pinIndex, false);
+        //   pin.removeExternalVoltage();
+        // } else {
+        this.setSwitchIsConnected(pinIndex, true);
+        pin.addExternalVoltage();
+        // }
       });
     }
 
@@ -890,7 +915,7 @@ namespace pxsim.visuals {
     private addCircuitElementsForLight(pinNumber: number) {
       const wireEl = createLightFromPinToGround(
         pinNumber,
-        this.lightWireHasJump(pinNumber)
+        this.lightWireHasJump(pinNumber),
       );
       this.part.el.append(wireEl);
 
