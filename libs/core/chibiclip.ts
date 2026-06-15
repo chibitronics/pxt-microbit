@@ -72,7 +72,7 @@ const prevPinValues: Array<number> = [
 /*
  * Visualization for the Chibi Clip.
  */
-//% color=#f91b4f weight=100 icon="\uf0c6" block="Chibi Clip" groups="['Lights', 'Sensing']"
+//% color=#f91b4f weight=100 icon="\uf0c6" block="Chibitronics" groups="['Lights', 'Sensing']"
 namespace ChibiClip {
   function init() {
     // Initialize empty event handlers.
@@ -161,7 +161,7 @@ namespace ChibiClip {
    * Sets the pin to the given level as a percentage value from 0 to 100.
    */
   //% blockId=chibiclip_setlevel
-  //% block="set $pin level to $level"
+  //% block="set $pin level to $level \\%"
   //% level.min=0 level.max=100
   //% parts=chibiclip
   //% group="Lights"
@@ -203,7 +203,7 @@ namespace ChibiClip {
   /**
    * Reads whether the pin is turned on or off.
    */
-  //% block="$pin is on"
+  //% block="$pin is ON"
   //% parts=chibiclip
   //% group="Lights"
   //% weight=1
