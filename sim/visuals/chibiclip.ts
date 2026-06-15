@@ -27,9 +27,10 @@ const CIRCLE_RADIUS = 14;
 const CIRCLE_DEFAULT_FILL = "transparent";
 const CIRCLE_Y = -37;
 
-const TEXT_Y = 6;
+const TEXT_Y = -33;
 const TEXT_TOP_Y = RECT_Y + RECT_Y / 4;
 const TEXT_X_DISTANCE = SPACING;
+const TEXT_COLOR = "white";
 
 const PIN_INDEX_DATA_NAME = "data-pin-index";
 
@@ -249,6 +250,7 @@ namespace pxsim.visuals {
       `${getRectangleXCoordinateForPin(visualizerPin)}`,
     );
     labelText.setAttribute("y", `${yPosition}`);
+    labelText.setAttribute("fill", TEXT_COLOR);
     labelText.innerHTML = text;
     return labelText;
   }
