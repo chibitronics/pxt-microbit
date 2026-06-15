@@ -281,6 +281,9 @@ namespace ChibiClip {
       case "released":
         pinToEventHandlers[pinIndex].onReleased = handler;
         break;
+      case "changed":
+        pinToEventHandlers[pinIndex].onChanged = handler;
+        break;
     }
   }
 }
@@ -307,6 +310,8 @@ enum PinEventParameter {
   Pressed = 0,
   //% block="released"
   Released = 1,
+  //% block="changed"
+  Changed = 2,
 }
 
 function getEventStringFromBlockParameter(effect: PinEventParameter) {
@@ -315,6 +320,8 @@ function getEventStringFromBlockParameter(effect: PinEventParameter) {
       return "pressed";
     case PinEventParameter.Released:
       return "released";
+    case PinEventParameter.Changed:
+      return "changed";
   }
 }
 

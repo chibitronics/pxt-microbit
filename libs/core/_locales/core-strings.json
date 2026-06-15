@@ -233,6 +233,7 @@
   "PinEvent.PulseHigh|block": "pulse high",
   "PinEvent.PulseLow|block": "pulse low",
   "PinEvent.Rise|block": "rise",
+  "PinEventParameter.Changed|block": "changed",
   "PinEventParameter.Pressed|block": "pressed",
   "PinEventParameter.Released|block": "released",
   "PinEventType.Edge|block": "edge",
