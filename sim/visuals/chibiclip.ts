@@ -961,6 +961,9 @@ namespace pxsim.visuals {
 
     private isSwitchConnected(pinNumber: number) {
       const clickableSwitchEl = this.getClickableSwitchElement(pinNumber);
+      if (clickableSwitchEl === null) {
+        return false;
+      }
       return clickableSwitchEl.classList.contains("on");
     }
 
