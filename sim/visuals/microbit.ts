@@ -1279,11 +1279,13 @@ path.sim-board {
                         let state = this.board;
                         let pin = state.edgeConnectorState.pins[index];
                         let svgpin = this.pins[index];
-                        if (pin.mode & PinFlags.Input) {
-                            let cursor = svg.cursorPoint(pt, this.element, ev);
-                            let v = (400 - cursor.y) / 40 * 1023
-                            pin.value = Math.max(0, Math.min(1023, Math.floor(v)));
-                        }
+                        // CHIBITRONICS: Disable behavior per Jie's request.
+                        // This means that the pins won't react when clicked.
+                        // if (pin.mode & PinFlags.Input) {
+                        //     let cursor = svg.cursorPoint(pt, this.element, ev);
+                        //     let v = (400 - cursor.y) / 40 * 1023
+                        //     pin.value = Math.max(0, Math.min(1023, Math.floor(v)));
+                        // }
                         this.updatePin(pin, index);
                     },
                     // start
@@ -1292,11 +1294,13 @@ path.sim-board {
                         let pin = state.edgeConnectorState.pins[index];
                         let svgpin = this.pins[index];
                         U.addClass(svgpin, "touched");
-                        if (pin.mode & PinFlags.Input) {
-                            let cursor = svg.cursorPoint(pt, this.element, ev);
-                            let v = (400 - cursor.y) / 40 * 1023
-                            pin.value = Math.max(0, Math.min(1023, Math.floor(v)));
-                        }
+                        // CHIBITRONICS: Disable behavior per Jie's request.
+                        // This means that the pins won't react when clicked.
+                        // if (pin.mode & PinFlags.Input) {
+                        //     let cursor = svg.cursorPoint(pt, this.element, ev);
+                        //     let v = (400 - cursor.y) / 40 * 1023
+                        //     pin.value = Math.max(0, Math.min(1023, Math.floor(v)));
+                        // }
                         this.updatePin(pin, index);
                     },
                     // stop
