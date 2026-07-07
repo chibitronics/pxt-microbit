@@ -6,7 +6,8 @@
         "help": "pxt serve --help",
         "start": "pxt serve",
         "build": "pxt staticpkg",
-        "postinstall": "patch-package"
+        "postinstall": "patch-package",
+        "postbuild": "node scripts/postbuild-beta-banner.js"
     },
     "keywords": [
         "JavaScript",
