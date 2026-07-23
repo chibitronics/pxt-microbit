@@ -1,7 +1,9 @@
 const fs = require("fs");
 const path = require("path");
 
-const indexPath = path.join(__dirname, "..", "built", "packaged", "index.html");
+const indexPath = process.argv[2]
+    ? path.resolve(process.argv[2])
+    : path.join(__dirname, "..", "built", "packaged", "index.html");
 
 if (!fs.existsSync(indexPath)) {
     console.warn(`[beta-banner] ${indexPath} not found; skipping`);
@@ -61,4 +63,4 @@ if (!html.includes(bodyMarker)) {
 }
 
 fs.writeFileSync(indexPath, html);
-console.log("[beta-banner] injected into built/packaged/index.html");
+console.log(`[beta-banner] injected into ${indexPath}`);

@@ -26,15 +26,15 @@ namespace pxsim {
         servoAngle = 0;
         mode = PinFlags.Unused;
         lastWriteMode = WriteMode.NoWrite; // Added for chibi-clip visualizer
-        isExternalVoltageApplied = false; // Added for chibi-clip visualizer
+        isExternalGroundApplied = false; // Added for chibi-clip visualizer
         pitch = false;
         pull = 0; // PullDown
         servoContinuous = false;
 
         digitalReadPin(): number {
             this.mode = PinFlags.Digital | PinFlags.Input;
-            if (this.isExternalVoltageApplied) {
-                return 1;
+            if (this.isExternalGroundApplied) {
+                return 0;
             }
             return this.value > 100 ? 1 : 0;
         }
@@ -46,13 +46,13 @@ namespace pxsim {
             runtime.queueDisplayUpdate();
         }
 
-        addExternalVoltage() {
-            this.isExternalVoltageApplied = true;
+        connectToGround() {
+            this.isExternalGroundApplied = true;
             runtime.queueDisplayUpdate();
         }
 
-        removeExternalVoltage() {
-            this.isExternalVoltageApplied = false;
+        disconnectFromGround() {
+            this.isExternalGroundApplied = false;
             runtime.queueDisplayUpdate();
         }
 
@@ -67,8 +67,8 @@ namespace pxsim {
 
         analogReadPin(): number {
             this.mode = PinFlags.Analog | PinFlags.Input;
-            if (this.isExternalVoltageApplied) {
-                return PIN_MAX_VALUE;
+            if (this.isExternalGroundApplied) {
+                return 0;
             }
             return this.value || 0;
         }

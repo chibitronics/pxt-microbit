@@ -74,6 +74,12 @@ const prevPinValues: Array<number> = [
  */
 //% color=#f91b4f weight=100 icon="\uf0c6" block="Chibitronics" groups="['Lights', 'Sensing']"
 namespace ChibiClip {
+  function configureSwitchInput(pinIndex: number) {
+    const pin = indexToDigitalPin(pinIndex);
+    pins.setPull(pin, PinPullMode.PullUp);
+    prevPinValues[pinIndex] = pins.digitalReadPin(pin);
+  }
+
   function init() {
     // Initialize empty event handlers.
     for (let i = 0; i < TOTAL_GPIO_PINS; i++) {
@@ -122,13 +128,13 @@ namespace ChibiClip {
         if (lowToHigh && handlersForPin.onHigh) {
           handlersForPin.onHigh();
         }
-        if (lowToHigh && handlersForPin.onPressed) {
+        if (highToLow && handlersForPin.onPressed) {
           handlersForPin.onPressed();
         }
         if (highToLow && handlersForPin.onLow) {
           handlersForPin.onLow();
         }
-        if (highToLow && handlersForPin.onReleased) {
+        if (lowToHigh && handlersForPin.onReleased) {
           handlersForPin.onReleased();
         }
       }
@@ -273,6 +279,10 @@ namespace ChibiClip {
   ) {
     const pinIndex = pin;
     const eventString = getEventStringFromBlockParameter(eventType);
+
+    // A sensing block represents a switch input. Configure only that input,
+    // once during setup, so unrelated light/output pins keep their defaults.
+    configureSwitchInput(pinIndex);
 
     switch (eventString) {
       case "pressed":
