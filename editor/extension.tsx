@@ -6,9 +6,11 @@
 import * as dialogs from "./dialogs";
 import * as flash from "./flash";
 import * as patch from "./patch";
+import { configureProjectShare } from "./projectShare";
 
 pxt.editor.initExtensionsAsync = function (opts: pxt.editor.ExtensionOptions): Promise<pxt.editor.ExtensionResult> {
     pxt.debug('loading microbit target extensions...')
+    configureProjectShare(opts);
 
     const manyAny = Math as any;
     if (!manyAny.imul)

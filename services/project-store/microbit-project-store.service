@@ -1,0 +1,27 @@
+[Unit]
+Description=Chibitronics microbit snapshot storage
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=microbit-store
+Group=microbit-store
+WorkingDirectory=/usr/local/apps/microbit-project-store
+ExecStart=/usr/local/bin/node server.js
+Environment=NODE_ENV=production
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+UMask=0077
+MemoryMax=256M
+TasksMax=64
+
+[Install]
+WantedBy=multi-user.target

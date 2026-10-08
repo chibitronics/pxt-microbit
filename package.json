@@ -7,7 +7,7 @@
         "start": "pxt serve",
         "build": "pxt staticpkg",
         "postinstall": "patch-package",
-        "postbuild": "node scripts/postbuild-beta-banner.js"
+        "postbuild": "node scripts/postbuild-beta-banner.js && node scripts/postbuild-cache-version.js"
     },
     "keywords": [
         "JavaScript",
