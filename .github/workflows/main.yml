@@ -31,7 +31,14 @@ jobs:
         npm test
 
     - name: Deploy static site to S3 bucket
-      run: aws s3 sync ./built/packaged s3://chibi-microbit --delete
+      run: |
+        aws s3 sync ./built/packaged s3://chibi-microbit --delete
+        # Avoid heuristic browser caching of HTML and update manifests.
+        for key in index.html serviceworker.js simulatorserviceworker.js sim.webmanifest; do
+          if [ -f "./built/packaged/$key" ]; then
+            aws s3 cp "./built/packaged/$key" "s3://chibi-microbit/$key" --cache-control "no-cache, max-age=0, must-revalidate" --only-show-errors
+          fi
+        done
 
     - name: Invalidate CloudFront
       run: aws cloudfront create-invalidation --distribution-id E1IKCN86TX9AGT --paths "/*"

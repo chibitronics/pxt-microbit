@@ -14,7 +14,7 @@ const setup = (base = "/microbit-sandbox/", origin = "https://legacy.circuitsket
         downloadScriptMetaAsync: async id => ({ legacyMeta: id }), parseScriptId: uri => `legacy:${uri}` };
     const context = { exports: {}, window: { location: { origin } },
         fetch: async (url, options) => { calls.push({ url, ...options }); return { ok: true, json: async () => ({ id: '_cABCDEFGHIJK', meta: { versions: {} } }) }; },
-        pxt: { webConfig: { relprefix: base }, Cloud: cloud,
+        pxt: { webConfig: { relprefix: base, pxtRelId: 'test-release' }, Cloud: cloud,
             Util: { requestAsync: async options => { calls.push(options); return { json: { id: '_cABCDEFGHIJK', meta: { versions: {} } } }; } } } };
     vm.runInNewContext(source, context);
     const view = { getShareUrl: async id => ({ legacyUrl: id }), publishAsync: async (...args) => args };
@@ -37,7 +37,8 @@ test('new snapshots reopen locally while old Microsoft shares remain supported',
     assert.equal(cloud.parseScriptId('https://legacy.circuitsketcher.com/microbit-sandbox/#pub:_cABCDEFGHIJK'), '_cABCDEFGHIJK');
     assert.equal(cloud.parseScriptId('_legacy123456'), 'legacy:_legacy123456');
     const shared = await view.getShareUrl('_cABCDEFGHIJK', false);
-    assert.equal(shared.url, 'https://legacy.circuitsketcher.com/microbit-sandbox/#pub:_cABCDEFGHIJK');
+    assert.equal(shared.url, 'https://legacy.circuitsketcher.com/microbit-sandbox/?v=test-release#pub:_cABCDEFGHIJK');
+    assert.ok(shared.embed.editor.includes('?v=test-release&embed=1#pub:_cABCDEFGHIJK'));
     assert.equal((await view.publishAsync('Test', undefined))[2], true);
 });
 
@@ -48,5 +49,5 @@ test('production uses same-origin API and root-level saved links', async () => {
     assert.equal(calls[0].headers['Content-Type'], 'application/json');
     assert.equal(calls[0].cache, 'no-store');
     assert.equal((await view.getShareUrl('_cABCDEFGHIJK', false)).url,
-        'https://microbit.chibitronics.com/#pub:_cABCDEFGHIJK');
+        'https://microbit.chibitronics.com/?v=test-release#pub:_cABCDEFGHIJK');
 });

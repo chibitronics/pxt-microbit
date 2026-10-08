@@ -70,7 +70,9 @@ The sandbox retains its separate write limit. Sandbox static responses use gzip.
 
 Pushing to `main` builds and tests the editor/service, syncs `built/packaged`
 to S3, and invalidates CloudFront. Wait for the action to succeed, then test
-live save and reopen.
+live save and reopen. Shared URLs include a release-version query to avoid
+older browsers reopening cached pre-update HTML. The entry HTML, service workers and simulator web
+manifest are published with Cache-Control no-cache/max-age=0/must-revalidate.
 The RDS instance remains private; no public MySQL listener is needed.
 
 The existing frontend GitHub Action does not deploy this backend. Deploy/restart

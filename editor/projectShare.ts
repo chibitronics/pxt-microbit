@@ -42,9 +42,13 @@ export function configureProjectShare(opts: pxt.editor.ExtensionOptions): void {
     const originalShareUrl = view.getShareUrl.bind(view);
     view.getShareUrl = (id: string, persistent: boolean) => {
         if (!isSavedProjectId(id)) return originalShareUrl(id, persistent);
-        const url = window.location.origin + base + '#pub:' + id;
+        // Existing browsers may retain pre-save-feature HTML by heuristic caching.
+        // Version navigation too, not just scripts, so shared links load this release.
+        const release = pxt.webConfig && (pxt.webConfig as any).pxtRelId || 'saved-projects';
+        const page = window.location.origin + base + '?v=' + encodeURIComponent(release);
+        const url = page + '#pub:' + id;
         return Promise.resolve({ url, embed: { url,
-            editor: '<iframe src="' + url + '&embed=1" width="100%" height="600" frameborder="0"></iframe>' } });
+            editor: '<iframe src="' + page + '&embed=1#pub:' + id + '" width="100%" height="600" frameborder="0"></iframe>' } });
     };
     const originalPublish = view.publishAsync.bind(view);
     // Snapshot saving requires no account and must never try Microsoft's
