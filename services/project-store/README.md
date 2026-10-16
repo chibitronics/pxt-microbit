@@ -6,6 +6,11 @@ copy. Edits require sharing again to create a new link. No account is required.
 Anyone with a link can read its code: this is not private cloud autosave, account
 sync, or an editable permalink. Local browser autosave is unchanged.
 
+Account sign-in is intentionally disabled in `pxtarget.json`: this deployment
+has no identity/authentication backend. Keep the identity providers and identity
+experiment disabled unless full authentication and account storage are deployed.
+Anonymous snapshot sharing and GitHub package support remain enabled.
+
 ## Current sandbox deployment
 
 - Editor: https://legacy.circuitsketcher.com/microbit-sandbox/
