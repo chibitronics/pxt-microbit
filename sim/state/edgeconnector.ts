@@ -140,7 +140,12 @@ namespace pxsim.pins {
         const pins = ec.pins;
         const pin = ec.pitchEnabled && (pins.filter(pin => !!pin && pin.pitch)[0] || pins[0]);
         const pitchVolume = ec.pitchVolume | 0;
-        if (pin && !edgeConnectorSoundDisabled) {
+        // Speaker audio is rendered separately below. Do not overwrite a GPIO
+        // input (especially a pulled-up P0 switch) with the speaker's PWM value.
+        // Otherwise tone cleanup leaves the switch LOW and later presses cannot
+        // produce the HIGH -> LOW transition used by Chibitronics handlers.
+        const drivesPin = !!pin && !edgeConnectorSoundDisabled && !(pin.mode & PinFlags.Input);
+        if (drivesPin) {
             pin.mode = PinFlags.Analog | PinFlags.Output;
             if (frequency <= 0 || pitchVolume <= 0) {
                 pin.value = 0;
@@ -162,7 +167,9 @@ namespace pxsim.pins {
         else {
             setTimeout(() => {
                 AudioContextManager.stop();
-                if (pin && !edgeConnectorSoundDisabled) {
+                // A program may have configured this pin as an input while
+                // the tone was playing; do not clear its new input state.
+                if (drivesPin && !(pin.mode & PinFlags.Input)) {
                     pin.value = 0;
                     pin.period = 0;
                     pin.mode = PinFlags.Unused;

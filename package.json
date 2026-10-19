@@ -6,6 +6,7 @@
         "help": "pxt serve --help",
         "start": "pxt serve",
         "build": "pxt staticpkg",
+        "test:sim": "node --test tests/simulator/*.test.cjs",
         "postinstall": "patch-package",
         "postbuild": "node scripts/postbuild-beta-banner.js && node scripts/postbuild-cache-version.js"
     },
